@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2322678250345488924}
   - component: {fileID: 5827468516961042115}
   - component: {fileID: 5982226966764320069}
+  - component: {fileID: 6628442012442991943}
   m_Layer: 0
   m_Name: chair_leg3
   m_TagString: Untagged
@@ -89,6 +90,28 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &6628442012442991943
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 840923729865644316}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -8666850696124968497, guid: 2d214ca70e27ab84cb6879ef6489fca2, type: 3}
 --- !u!1 &3176443854739125817
 GameObject:
   m_ObjectHideFlags: 0
@@ -98,6 +121,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6611217834081738409}
+  - component: {fileID: 3286253567952909464}
   m_Layer: 0
   m_Name: bench
   m_TagString: Untagged
@@ -125,6 +149,28 @@ Transform:
   - {fileID: 2322678250345488924}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!64 &3286253567952909464
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3176443854739125817}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 0}
 --- !u!1 &3369412636988860014
 GameObject:
   m_ObjectHideFlags: 0
@@ -136,6 +182,7 @@ GameObject:
   - component: {fileID: 2659444504989921933}
   - component: {fileID: 7045417636400569795}
   - component: {fileID: 8256721923415477650}
+  - component: {fileID: 6178228117577468308}
   m_Layer: 0
   m_Name: chair_base
   m_TagString: Untagged
@@ -214,6 +261,28 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &6178228117577468308
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3369412636988860014}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 3734221791741797359, guid: 2d214ca70e27ab84cb6879ef6489fca2, type: 3}
 --- !u!1 &3826165331271996925
 GameObject:
   m_ObjectHideFlags: 0
@@ -225,6 +294,7 @@ GameObject:
   - component: {fileID: 1300981302655757524}
   - component: {fileID: 7743406084252558432}
   - component: {fileID: 5262509242199800767}
+  - component: {fileID: 2018506583809368588}
   m_Layer: 0
   m_Name: chair_leg
   m_TagString: Untagged
@@ -303,6 +373,28 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &2018506583809368588
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3826165331271996925}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 6599117983523515086, guid: 2d214ca70e27ab84cb6879ef6489fca2, type: 3}
 --- !u!1 &4898986257935963632
 GameObject:
   m_ObjectHideFlags: 0
@@ -314,6 +406,7 @@ GameObject:
   - component: {fileID: 2866974709783746442}
   - component: {fileID: 2520557829604582599}
   - component: {fileID: 4510733083658636169}
+  - component: {fileID: 2193331322623899844}
   m_Layer: 0
   m_Name: chair_leg1
   m_TagString: Untagged
@@ -392,6 +485,28 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &2193331322623899844
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4898986257935963632}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -7007725995780295438, guid: 2d214ca70e27ab84cb6879ef6489fca2, type: 3}
 --- !u!1 &5517472834131151366
 GameObject:
   m_ObjectHideFlags: 0
@@ -403,6 +518,7 @@ GameObject:
   - component: {fileID: 2599289702720716862}
   - component: {fileID: 6499601181155281132}
   - component: {fileID: 3502450229420882928}
+  - component: {fileID: 1356203944311343833}
   m_Layer: 0
   m_Name: chair_leg2
   m_TagString: Untagged
@@ -481,3 +597,25 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &1356203944311343833
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5517472834131151366}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 6680071261550394104, guid: 2d214ca70e27ab84cb6879ef6489fca2, type: 3}
