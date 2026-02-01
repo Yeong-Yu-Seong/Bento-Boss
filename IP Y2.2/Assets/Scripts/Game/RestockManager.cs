@@ -1,13 +1,14 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using UnityEngine.XR.Interaction.Toolkit; 
+using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using System.Collections.Generic;
 
 public class SocketStockManager : MonoBehaviour
 {
     [Header("--- Stock Counting ---")]
-    public List<UnityEngine.XR.Interaction.Toolkit.Interactors.XRSocketInteractor> mySockets; 
+    public List<XRSocketInteractor> mySockets; 
     public TextMeshProUGUI stockText;
     
     [Header("--- Spawning Logic ---")]
@@ -18,9 +19,12 @@ public class SocketStockManager : MonoBehaviour
     private bool isCoolingDown = false;
     
     [Header("--- Trash Disposal ---")]
-    public TextMeshProUGUI trashCountText;  // Drag a UI Text element here
+    public TextMeshProUGUI trashCountText;
     private int trashDisposed = 0;
-    
+
+    // Cache the count to avoid unnecessary UI updates
+    private int lastCount = -1;
+
     void Start()
     {
         if (uiButton != null)
@@ -28,70 +32,63 @@ public class SocketStockManager : MonoBehaviour
             uiButton.onClick.AddListener(TrySpawnCrate);
         }
         
-        // Subscribe to socket events for immediate updates
         foreach (var socket in mySockets)
         {
             if (socket != null)
             {
-                socket.selectEntered.AddListener(OnSocketFilled);
-                socket.selectExited.AddListener(OnSocketEmptied);
+                // Subscribe to events
+                socket.selectEntered.AddListener(OnSocketChanged);
+                socket.selectExited.AddListener(OnSocketChanged);
             }
         }
         
-        UpdateStockDisplay();
+        UpdateStockDisplay(true); // Initial forced update
         UpdateTrashDisplay();
     }
     
-    void OnDestroy()
+    // Use OnDisable in addition to OnDestroy for better VR cleanup
+    void OnDisable()
     {
-        // Clean up listeners
         foreach (var socket in mySockets)
         {
             if (socket != null)
             {
-                socket.selectEntered.RemoveListener(OnSocketFilled);
-                socket.selectExited.RemoveListener(OnSocketEmptied);
+                socket.selectEntered.RemoveListener(OnSocketChanged);
+                socket.selectExited.RemoveListener(OnSocketChanged);
             }
         }
     }
     
-    void OnSocketFilled(SelectEnterEventArgs args)
+    // --- FIX 2: Event-driven updates ---
+    void OnSocketChanged(BaseInteractionEventArgs args)
     {
         UpdateStockDisplay();
     }
     
-    void OnSocketEmptied(SelectExitEventArgs args)
-    {
-        UpdateStockDisplay();
-    }
-    
-    void Update()
-    {
-        // Still update every frame as backup
-        UpdateStockDisplay();
-    }
-    
-    void UpdateStockDisplay()
+    void UpdateStockDisplay(bool forceUpdate = false)
     {
         int currentCount = 0;
-        
         foreach (var socket in mySockets)
         {
             if (socket == null) continue;
             
-            // Try multiple methods to check if socket has an object
-            if (socket.hasSelection || 
-                socket.interactablesSelected.Count > 0 ||
-                socket.firstInteractableSelected != null)
+            // Check if socket has an object
+            if (socket.hasSelection || socket.interactablesSelected.Count > 0)
             {
                 currentCount++;
             }
         }
-        
-        if (stockText != null)
+
+        // Only update UI and allocate strings if the number actually changed
+        if (forceUpdate || currentCount != lastCount)
         {
-            stockText.text = "Stock: " + currentCount.ToString();
-            stockText.color = (currentCount == 0) ? Color.red : Color.black;
+            lastCount = currentCount;
+            if (stockText != null)
+            {
+                // Using string interpolation is slightly cleaner, but the key is only doing it once!
+                stockText.text = $"Stock: {currentCount}";
+                stockText.color = (currentCount == 0) ? Color.red : Color.black;
+            }
         }
     }
     
@@ -99,13 +96,13 @@ public class SocketStockManager : MonoBehaviour
     {
         if (trashCountText != null)
         {
-            trashCountText.text = "Trash Disposed: " + trashDisposed.ToString();
+            trashCountText.text = $"Trash Disposed: {trashDisposed}";
         }
     }
     
-    // Call this function from the trash can trigger
     public void DisposeTrash(GameObject trashedObject)
     {
+        if (trashedObject == null) return; // Safety check
         trashDisposed++;
         UpdateTrashDisplay();
         Destroy(trashedObject);
