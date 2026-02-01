@@ -105,3 +105,10 @@ Assets/TextMesh Pro
 *.dll
 **/google-services*.json
 **/google-services*.json.meta
+
+# Ignore all baked lightmap textures and data
+[Aa]ssets/Scenes/*/Lightmap-*
+*.exr
+*.lightmap
+# Ignore recovery scenes from crashes
+**/_Recovery/
