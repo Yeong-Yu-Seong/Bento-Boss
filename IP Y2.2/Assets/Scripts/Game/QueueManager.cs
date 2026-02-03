@@ -10,6 +10,7 @@ public class QueueManager : MonoBehaviour
 
     [Header("Dependencies")]
     [SerializeField] private OrderBubbleController orderBubble; 
+    [SerializeField] private TrayValidator trayValidator; // Reference to TrayValidator
 
     private int[] studentTargetIndices;
     private bool hasOrdered = false;
@@ -30,6 +31,11 @@ public class QueueManager : MonoBehaviour
             return;
         }
 
+        if (trayValidator == null)
+        {
+            Debug.LogError("QueueManager: TrayValidator reference is missing! Please assign it in the Inspector.");
+        }
+
         // Initialize targets
         studentTargetIndices = new int[students.Length];
         for (int i = 0; i < students.Length; i++)
@@ -41,9 +47,6 @@ public class QueueManager : MonoBehaviour
     private void Update()
     {
         HandleMovement();
-        
-        // NOTE: The timer is gone. 
-        // The queue will NOT move until you call ShiftQueue() from your Serve Script.
     }
 
     private void HandleMovement()
@@ -77,26 +80,36 @@ public class QueueManager : MonoBehaviour
             {
                 if (!hasOrdered)
                 {
-                    if (orderBubble != null) orderBubble.GenerateNewOrder();
+                    // Call TrayValidator to start the new order
+                    if (trayValidator != null)
+                    {
+                        trayValidator.StartNewOrder();
+                    }
+                    else
+                    {
+                        // Fallback to old behavior if TrayValidator isn't set
+                        if (orderBubble != null) orderBubble.GenerateNewOrder();
+                    }
                     hasOrdered = true;
                 }
             }
         }
     }
 
-    // CALL THIS FUNCTION from your "Stock/Serve" script when the player serves food!
+    // CALL THIS FUNCTION when the order is complete
+    // TrayValidator will call this automatically when player places correct items on tray
     public void ShiftQueue()
     {
-        // 1. Hide bubble
-        if (orderBubble != null) orderBubble.HideOrder();
         hasOrdered = false; 
 
-        // 2. Cycle spots
+        // Cycle spots
         for (int i = 0; i < students.Length; i++)
         {
             if (studentTargetIndices[i] == 0) studentTargetIndices[i] = 4;      // Spot 1 -> Reset
             else if (studentTargetIndices[i] == 4) studentTargetIndices[i] = 3; // Reset -> Spot 4
             else studentTargetIndices[i] -= 1;                                  // Move Up
         }
+
+        Debug.Log("Queue shifted to next customer.");
     }
 }
