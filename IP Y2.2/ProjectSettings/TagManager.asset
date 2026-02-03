@@ -8,6 +8,14 @@ TagManager:
   - FoodItem
   - RefillCube
   - Trash
+  - Apple
+  - Orange
+  - Strawberry
+  - GreenTea
+  - Blueberry
+  - Bento1
+  - Bento2
+  - Banana
   layers:
   - Default
   - TransparentFX
