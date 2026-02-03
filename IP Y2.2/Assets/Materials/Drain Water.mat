@@ -127,12 +127,12 @@ Material:
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _Deep_Color: {r: 0.008123855, g: 0.3645425, b: 0.6150943, a: 1}
+    - _Deep_Color: {r: 0.3431604, g: 0.5855329, b: 0.75, a: 1}
     - _Emission: {r: 0.39554998, g: 0.5572424, b: 0.7735849, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _Shallow_Color: {r: 0.2320754, g: 0.74152184, b: 1, a: 1}
+    - _Shallow_Color: {r: 0.41006586, g: 0.7414908, b: 0.9150943, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
-    - _Specular_Color: {r: 0, g: 0.26776037, b: 0.7056604, a: 1}
+    - _Specular_Color: {r: 0.5476371, g: 0.6098296, b: 0.7122642, a: 1}
     - _Tiling: {r: 1, g: 1, b: 0, a: 0}
     - _Water_Color: {r: 0.20943394, g: 0.6585304, b: 1, a: 1}
     - _Water_Color_2: {r: 0.57169807, g: 1, b: 0.93725824, a: 1}

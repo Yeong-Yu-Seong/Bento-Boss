@@ -9,13 +9,13 @@ TagManager:
   - RefillCube
   - Trash
   - Apple
-  - Banana
   - Orange
   - Strawberry
+  - GreenTea
+  - Blueberry
   - Bento1
   - Bento2
-  - Blueberry
-  - GreenTea
+  - Banana
   layers:
   - Default
   - TransparentFX

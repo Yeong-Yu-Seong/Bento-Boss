@@ -15,15 +15,15 @@ MonoBehaviour:
   m_LayerNames:
   - Default
   - Food
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Tray 1
+  - Tray 2
+  - Orange
+  - Apple
+  - Strawberry
+  - Banana
+  - Drink
+  - Bento 1
+  - Bento 2
   - 
   - 
   - 
