@@ -112,3 +112,5 @@ Assets/TextMesh Pro
 *.lightmap
 # Ignore recovery scenes from crashes
 **/_Recovery/
+# Ignore large Lighting Data assets
+**/LightingData.asset
