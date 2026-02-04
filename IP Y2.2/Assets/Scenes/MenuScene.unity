@@ -8633,6 +8633,76 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 9095833968678967679, guid: 721b1400b464341488aef39365f97747, type: 3}
   m_PrefabInstance: {fileID: 130256088}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &130432037
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 130432038}
+  - component: {fileID: 130432041}
+  - component: {fileID: 130432040}
+  - component: {fileID: 130432039}
+  m_Layer: 0
+  m_Name: FirebaseController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &130432038
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 130432037}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 815067222}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &130432039
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 130432037}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f1df69f8d1f33e428c7d26108ed211d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BentoBoss.FirebaseManagers.FirebaseManager
+--- !u!114 &130432040
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 130432037}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f22dfec58457a984a8022980ce65c760, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BentoBoss.FirebaseManagers.DatabaseManager
+--- !u!114 &130432041
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 130432037}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e15a6b44c081e0949838495727bce5df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BentoBoss.FirebaseManagers.AuthManager
 --- !u!1001 &133156678
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -54185,6 +54255,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 947538784}
+  - {fileID: 130432038}
   - {fileID: 1815012448}
   - {fileID: 971722029}
   - {fileID: 801408208}
