@@ -114,3 +114,4 @@ Assets/TextMesh Pro
 **/_Recovery/
 # Ignore large Lighting Data assets
 **/LightingData.asset
+**/LightingData.asset.meta
