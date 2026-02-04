@@ -19,8 +19,8 @@ LightingSettings:
   m_LightmapMaxSize: 32
   m_LightmapSizeFixed: 0
   m_UseMipmapLimits: 1
-  m_BakeResolution: 128
-  m_Padding: 8
+  m_BakeResolution: 40
+  m_Padding: 4
   m_LightmapCompression: 3
   m_AO: 0
   m_AOMaxDistance: 1
