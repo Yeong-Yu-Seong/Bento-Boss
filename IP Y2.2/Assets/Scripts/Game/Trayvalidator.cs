@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 public class TrayValidator : MonoBehaviour
@@ -11,13 +12,42 @@ public class TrayValidator : MonoBehaviour
     [Tooltip("Delay before moving to next customer after order complete (seconds)")]
     [SerializeField] private float orderCompleteDelay = 2f;
 
-    // Maps tag names to counts (e.g., "Apple" -> 3, "GreenTea" -> 2)
+    [Header("Socket References")]
+    [Header("Drink Sockets")]
+    public Transform drinkSocket1;
+    public Transform drinkSocket2;
+
+    [Header("Bento Sockets")]
+    public Transform bento1Socket;
+    public Transform bento2Socket;
+
+    [Header("Apple Sockets")]
+    public Transform appleSocket1;
+    public Transform appleSocket2;
+    public Transform appleSocket3;
+
+    [Header("Banana Sockets")]
+    public Transform bananaSocket1;
+    public Transform bananaSocket2;
+    public Transform bananaSocket3;
+
+    [Header("Orange Sockets")]
+    public Transform orangeSocket1;
+    public Transform orangeSocket2;
+    public Transform orangeSocket3;
+
+    [Header("Strawberry Sockets")]
+    public Transform strawberrySocket1;
+    public Transform strawberrySocket2;
+    public Transform strawberrySocket3;
+
+    [Header("Snap Settings")]
+    public float snapDelay = 0.3f;
+    public float snapSpeed = 8f;
+
     private Dictionary<string, int> itemsOnTray = new Dictionary<string, int>();
-    
-    // Track actual GameObjects on the tray so we can destroy them later
     private List<GameObject> physicalItemsOnTray = new List<GameObject>();
     
-    // What we're looking for
     private string requiredFoodTag;
     private int requiredFoodQuantity;
     private string requiredDrinkTag;
@@ -25,65 +55,63 @@ public class TrayValidator : MonoBehaviour
 
     private bool orderActive = false;
 
-    // Tag name mappings (based on your food/drink arrays in OrderBubbleController)
     private readonly string[] foodTags = { "Apple", "Banana", "Orange", "Strawberry", "Bento1", "Bento2" };
     private readonly string[] drinkTags = { "Blueberry", "GreenTea" };
 
-    // SINGLETON PATTERN
+    private Dictionary<GameObject, Coroutine> pendingSnaps = new Dictionary<GameObject, Coroutine>();
+    private HashSet<GameObject> snappedItems = new HashSet<GameObject>();
+    
+    private Dictionary<Transform, GameObject> socketOccupancy = new Dictionary<Transform, GameObject>();
+    private Dictionary<GameObject, Transform> itemToSocket = new Dictionary<GameObject, Transform>();
+
     public static TrayValidator Instance;
 
     private void Awake()
     {
-        Debug.Log("TrayValidator: Awake called");
         Instance = this;
     }
 
     private void Start()
     {
-        Debug.Log("TrayValidator: Start called");
-        // Validation checks
         if (orderBubbleController == null)
         {
-            Debug.LogError("TrayValidator: OrderBubbleController reference is missing! Please assign it in the Inspector.");
-        }
-        else
-        {
-            Debug.Log("TrayValidator: OrderBubbleController reference is assigned correctly");
+            Debug.LogError("TrayValidator: OrderBubbleController reference is missing!");
         }
     }
 
-    // Call this when a new customer arrives at Spot 1
     public void StartNewOrder()
     {
-        Debug.Log("=== TrayValidator: StartNewOrder called ===");
-        Debug.Log($"TrayValidator: orderActive BEFORE = {orderActive}");
-        
-        // CRASH FIX: Stop any pending cleanup from previous orders to prevent logic overlaps
         CancelInvoke();
         
-        // 1. Generate the order
+        foreach (var kvp in pendingSnaps)
+        {
+            if (kvp.Value != null)
+            {
+                StopCoroutine(kvp.Value);
+            }
+        }
+        pendingSnaps.Clear();
+        snappedItems.Clear();
+        socketOccupancy.Clear();
+        itemToSocket.Clear();
+        
         if(orderBubbleController != null) 
             orderBubbleController.GenerateNewOrder();
 
-        // 2. Read what we need to validate
         SetupOrderRequirements();
 
-        // 3. Clear the tray tracking (Fresh start)
-        // We clear the dictionary and list to ensure no ghost items exist from previous crashes/resets
         itemsOnTray.Clear();
         physicalItemsOnTray.Clear();
 
         orderActive = true;
-        Debug.Log($"TrayValidator: orderActive AFTER = {orderActive}");
 
-        Debug.Log($"Order active: Need {requiredFoodQuantity}x {requiredFoodTag} + {requiredDrinkQuantity}x {requiredDrinkTag}");
+        Debug.Log($"New Order: {requiredFoodQuantity}x {requiredFoodTag} + {requiredDrinkQuantity}x {requiredDrinkTag}");
     }
 
     private void SetupOrderRequirements()
     {
         if (orderBubbleController == null) return;
 
-        // CRASH FIX: Bounds checking to prevent IndexOutOfRangeException if IDs are wrong
         int foodID = orderBubbleController.requiredFoodID;
         if (foodID >= 0 && foodID < foodTags.Length)
         {
@@ -109,55 +137,23 @@ public class TrayValidator : MonoBehaviour
         }
         
         requiredDrinkQuantity = orderBubbleController.requiredDrinkQuantity;
-        
-        Debug.Log($"TrayValidator: Setup requirements - Food: {requiredFoodTag} x{requiredFoodQuantity}, Drink: {requiredDrinkTag} x{requiredDrinkQuantity}");
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log($">>> OnTriggerEnter FIRED! Object: {other.gameObject.name}, Tag: {other.tag}, IsTrigger: {other.isTrigger}");
-        
-        if (!orderActive)
-        {
-            Debug.Log(">>> OnTriggerEnter: orderActive is FALSE, exiting early");
-            return;
-        }
-
-        if (other == null)
-        {
-            Debug.Log(">>> OnTriggerEnter: other is NULL, exiting early");
-            return;
-        }
+        if (!orderActive) return;
+        if (other == null) return;
 
         GameObject itemObj = other.attachedRigidbody ? other.attachedRigidbody.gameObject : other.gameObject;
-        Debug.Log($">>> OnTriggerEnter: itemObj determined as {itemObj.name}");
         
-        if (itemObj == null)
-        {
-            Debug.Log(">>> OnTriggerEnter: itemObj is NULL, exiting early");
-            return;
-        }
+        if (itemObj == null) return;
+        if (other.gameObject != itemObj) return;
 
         string tag = itemObj.tag;
-        Debug.Log($">>> OnTriggerEnter: Checking tag '{tag}' against food/drink tags");
-
-        // CHILD COLLIDER FIX: Only process if the collider's GameObject matches the root object
-        // This prevents child colliders from triggering duplicate detections
-        if (other.gameObject != itemObj)
-        {
-            Debug.Log($">>> OnTriggerEnter: Ignoring child collider '{other.gameObject.name}' of parent '{itemObj.name}'");
-            return;
-        }
 
         if (IsFoodOrDrinkTag(tag))
         {
-            Debug.Log($">>> OnTriggerEnter: '{tag}' IS a food or drink tag!");
-            
-            if (physicalItemsOnTray.Contains(itemObj))
-            {
-                Debug.Log($">>> OnTriggerEnter: {itemObj.name} is ALREADY tracked, ignoring");
-                return;
-            }
+            if (physicalItemsOnTray.Contains(itemObj)) return;
 
             physicalItemsOnTray.Add(itemObj);
 
@@ -170,53 +166,77 @@ public class TrayValidator : MonoBehaviour
                 itemsOnTray[tag] = 1;
             }
 
-            Debug.Log($"TrayValidator: Added {itemObj.name}. Current {tag} count: {itemsOnTray[tag]}");
+            Debug.Log($"Added {tag} ({itemsOnTray[tag]}/{(tag == requiredFoodTag ? requiredFoodQuantity : requiredDrinkQuantity)})");
+            
+            if (IsCorrectItemForOrder(tag))
+            {
+                Transform targetSocket = GetSocketForItem(tag, itemObj);
+                if (targetSocket != null)
+                {
+                    socketOccupancy[targetSocket] = itemObj;
+                    itemToSocket[itemObj] = targetSocket;
+                    
+                    Rigidbody rb = itemObj.GetComponent<Rigidbody>();
+                    if (rb != null)
+                    {
+                        rb.useGravity = false;
+                        
+                        if (!rb.isKinematic)
+                        {
+                            rb.linearVelocity = Vector3.zero;
+                            rb.angularVelocity = Vector3.zero;
+                        }
+                        
+                        rb.isKinematic = true;
+                    }
+                    
+                    Coroutine snapCoroutine = StartCoroutine(SnapToSocketAfterDelay(itemObj, targetSocket));
+                    pendingSnaps[itemObj] = snapCoroutine;
+                }
+            }
+            
             ValidateOrder();
-        }
-        else
-        {
-            Debug.Log($">>> OnTriggerEnter: '{tag}' is NOT a food or drink tag, ignoring");
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        Debug.Log($">>> OnTriggerExit FIRED! Object: {other.gameObject.name}, Tag: {other.tag}, IsTrigger: {other.isTrigger}");
-        
-        if (!orderActive)
-        {
-            Debug.Log(">>> OnTriggerExit: orderActive is FALSE, exiting early");
-            return;
-        }
-        
-        if (other == null)
-        {
-            Debug.Log(">>> OnTriggerExit: other is NULL, exiting early");
-            return;
-        }
+        if (!orderActive) return;
+        if (other == null) return;
 
         GameObject itemObj = other.attachedRigidbody ? other.attachedRigidbody.gameObject : other.gameObject;
-        Debug.Log($">>> OnTriggerExit: itemObj determined as {itemObj.name}");
         
-        if (itemObj == null)
-        {
-            Debug.Log(">>> OnTriggerExit: itemObj is NULL, exiting early");
-            return;
-        }
-
-        // CHILD COLLIDER FIX: Only process if the collider's GameObject matches the root object
-        // This prevents child colliders from triggering duplicate detections
-        if (other.gameObject != itemObj)
-        {
-            Debug.Log($">>> OnTriggerExit: Ignoring child collider '{other.gameObject.name}' of parent '{itemObj.name}'");
-            return;
-        }
+        if (itemObj == null) return;
+        if (other.gameObject != itemObj) return;
 
         string tag = itemObj.tag;
 
         if (physicalItemsOnTray.Contains(itemObj))
         {
-            Debug.Log($">>> OnTriggerExit: {itemObj.name} WAS being tracked, removing it");
+            if (pendingSnaps.ContainsKey(itemObj))
+            {
+                StopCoroutine(pendingSnaps[itemObj]);
+                pendingSnaps.Remove(itemObj);
+            }
+            
+            if (snappedItems.Contains(itemObj))
+            {
+                snappedItems.Remove(itemObj);
+            }
+            
+            if (itemToSocket.ContainsKey(itemObj))
+            {
+                Transform socket = itemToSocket[itemObj];
+                socketOccupancy.Remove(socket);
+                itemToSocket.Remove(itemObj);
+            }
+            
+            Rigidbody rb = itemObj.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.isKinematic = false;
+                rb.useGravity = true;
+            }
             
             physicalItemsOnTray.Remove(itemObj);
 
@@ -229,13 +249,9 @@ public class TrayValidator : MonoBehaviour
                 }
             }
             
-            Debug.Log($"TrayValidator: Removed {itemObj.name}. Current {tag} count: {(itemsOnTray.ContainsKey(tag) ? itemsOnTray[tag] : 0)}");
+            Debug.Log($"Removed {tag} (remaining: {(itemsOnTray.ContainsKey(tag) ? itemsOnTray[tag] : 0)})");
 
             ValidateOrder();
-        }
-        else
-        {
-            Debug.Log($">>> OnTriggerExit: {itemObj.name} was NOT being tracked, ignoring");
         }
     }
 
@@ -252,12 +268,107 @@ public class TrayValidator : MonoBehaviour
         return false;
     }
 
+    private bool IsCorrectItemForOrder(string itemTag)
+    {
+        if (!orderActive) return false;
+        return itemTag == requiredFoodTag || itemTag == requiredDrinkTag;
+    }
+
+    private Transform GetSocketForItem(string itemTag, GameObject item)
+    {
+        if (itemTag == "Blueberry" || itemTag == "GreenTea")
+        {
+            if (!socketOccupancy.ContainsKey(drinkSocket1)) return drinkSocket1;
+            if (!socketOccupancy.ContainsKey(drinkSocket2)) return drinkSocket2;
+            return null;
+        }
+        
+        if (itemTag == "Bento1") 
+        {
+            if (!socketOccupancy.ContainsKey(bento1Socket)) return bento1Socket;
+            return null;
+        }
+        
+        if (itemTag == "Bento2") 
+        {
+            if (!socketOccupancy.ContainsKey(bento2Socket)) return bento2Socket;
+            return null;
+        }
+        
+        if (itemTag == "Apple")
+        {
+            if (!socketOccupancy.ContainsKey(appleSocket1)) return appleSocket1;
+            if (!socketOccupancy.ContainsKey(appleSocket2)) return appleSocket2;
+            if (!socketOccupancy.ContainsKey(appleSocket3)) return appleSocket3;
+            return null;
+        }
+        
+        if (itemTag == "Banana")
+        {
+            if (!socketOccupancy.ContainsKey(bananaSocket1)) return bananaSocket1;
+            if (!socketOccupancy.ContainsKey(bananaSocket2)) return bananaSocket2;
+            if (!socketOccupancy.ContainsKey(bananaSocket3)) return bananaSocket3;
+            return null;
+        }
+        
+        if (itemTag == "Orange")
+        {
+            if (!socketOccupancy.ContainsKey(orangeSocket1)) return orangeSocket1;
+            if (!socketOccupancy.ContainsKey(orangeSocket2)) return orangeSocket2;
+            if (!socketOccupancy.ContainsKey(orangeSocket3)) return orangeSocket3;
+            return null;
+        }
+        
+        if (itemTag == "Strawberry")
+        {
+            if (!socketOccupancy.ContainsKey(strawberrySocket1)) return strawberrySocket1;
+            if (!socketOccupancy.ContainsKey(strawberrySocket2)) return strawberrySocket2;
+            if (!socketOccupancy.ContainsKey(strawberrySocket3)) return strawberrySocket3;
+            return null;
+        }
+        
+        return null;
+    }
+
+    private IEnumerator SnapToSocketAfterDelay(GameObject item, Transform socket)
+    {
+        float elapsedTime = 0f;
+        Vector3 startPos = item.transform.position;
+        Quaternion startRot = item.transform.rotation;
+        
+        while (elapsedTime < snapDelay)
+        {
+            if (item == null || !physicalItemsOnTray.Contains(item))
+            {
+                yield break;
+            }
+            
+            elapsedTime += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsedTime / snapDelay);
+            
+            item.transform.position = Vector3.Lerp(startPos, socket.position, t);
+            item.transform.rotation = Quaternion.Lerp(startRot, socket.rotation, t);
+            
+            yield return null;
+        }
+        
+        if (item != null)
+        {
+            item.transform.position = socket.position;
+            item.transform.rotation = socket.rotation;
+            snappedItems.Add(item);
+        }
+        
+        if (pendingSnaps.ContainsKey(item))
+        {
+            pendingSnaps.Remove(item);
+        }
+    }
+
     private void ValidateOrder()
     {
         int foodCount = itemsOnTray.ContainsKey(requiredFoodTag) ? itemsOnTray[requiredFoodTag] : 0;
         int drinkCount = itemsOnTray.ContainsKey(requiredDrinkTag) ? itemsOnTray[requiredDrinkTag] : 0;
-        
-        Debug.Log($"ValidateOrder: Current food={foodCount}/{requiredFoodQuantity}, drink={drinkCount}/{requiredDrinkQuantity}");
         
         if (foodCount == requiredFoodQuantity && drinkCount == requiredDrinkQuantity)
         {
@@ -271,12 +382,8 @@ public class TrayValidator : MonoBehaviour
             
             if (totalItemsOnTray == expectedTotal)
             {
-                Debug.Log("TrayValidator: Order requirements met! Triggering completion.");
+                Debug.Log("✓ ORDER COMPLETE!");
                 OnOrderComplete();
-            }
-            else
-            {
-                Debug.Log($"TrayValidator: Extra items on tray ({totalItemsOnTray} vs {expectedTotal}).");
             }
         }
     }
@@ -284,19 +391,15 @@ public class TrayValidator : MonoBehaviour
     private void OnOrderComplete()
     {
         orderActive = false;
-        Debug.Log("=== ORDER COMPLETE! Correct items on tray. ===");
 
         if(orderBubbleController != null)
             orderBubbleController.HideOrder();
 
-        Debug.Log($"TrayValidator: Waiting {orderCompleteDelay} seconds...");
         Invoke(nameof(CompleteOrderSequence), orderCompleteDelay);
     }
 
     private void CompleteOrderSequence()
     {
-        Debug.Log("=== TrayValidator: CompleteOrderSequence started ===");
-        
         ClearPhysicalItems();
 
         if (QueueManager.Instance != null)
@@ -311,7 +414,17 @@ public class TrayValidator : MonoBehaviour
 
     public void ClearPhysicalItems()
     {
-        Debug.Log($"=== TrayValidator: Cleanup Items: {physicalItemsOnTray.Count} ===");
+        foreach (var kvp in pendingSnaps)
+        {
+            if (kvp.Value != null)
+            {
+                StopCoroutine(kvp.Value);
+            }
+        }
+        pendingSnaps.Clear();
+        snappedItems.Clear();
+        socketOccupancy.Clear();
+        itemToSocket.Clear();
         
         List<GameObject> itemsToDestroy = new List<GameObject>(physicalItemsOnTray);
         

@@ -4,18 +4,20 @@ using System.Collections.Generic;
 public class QueueManager : MonoBehaviour
 {
     [Header("Queue Settings")]
-    [SerializeField] private Transform[] waypoints; // Spot1, Spot2, Spot3, Spot4, ResetSpot
-    [SerializeField] private GameObject[] students; // The 4 NPC models
+    [SerializeField] private Transform[] waypoints;
+    [SerializeField] private GameObject[] students;
     [SerializeField] private float walkSpeed = 2.0f;
 
     [Header("Dependencies")]
     [SerializeField] private OrderBubbleController orderBubble; 
-    [SerializeField] private TrayValidator trayValidator; // Reference to TrayValidator
+    [SerializeField] private TrayValidator trayValidator;
 
     private int[] studentTargetIndices;
     private bool hasOrdered = false;
+    
+    private float movementCheckInterval = 0.02f;
+    private float lastMovementCheck = 0f;
 
-    // SINGLETON PATTERN: Allows other scripts to find this manager easily
     public static QueueManager Instance;
 
     private void Awake()
@@ -36,7 +38,6 @@ public class QueueManager : MonoBehaviour
             Debug.LogError("QueueManager: TrayValidator reference is missing! Please assign it in the Inspector.");
         }
 
-        // Initialize targets
         studentTargetIndices = new int[students.Length];
         for (int i = 0; i < students.Length; i++)
         {
@@ -46,7 +47,11 @@ public class QueueManager : MonoBehaviour
 
     private void Update()
     {
-        HandleMovement();
+        if (Time.time - lastMovementCheck >= movementCheckInterval)
+        {
+            HandleMovement();
+            lastMovementCheck = Time.time;
+        }
     }
 
     private void HandleMovement()
@@ -59,14 +64,12 @@ public class QueueManager : MonoBehaviour
 
             if (distance > 0.1f)
             {
-                // Move
                 students[i].transform.position = Vector3.MoveTowards(
                     students[i].transform.position, 
                     target.position, 
                     walkSpeed * Time.deltaTime
                 );
 
-                // Rotate
                 Quaternion targetRotation = Quaternion.LookRotation(direction);
                 students[i].transform.rotation = Quaternion.Slerp(
                     students[i].transform.rotation, 
@@ -75,19 +78,16 @@ public class QueueManager : MonoBehaviour
                 );
             }
             
-            // Trigger Order Logic when arriving at Spot 1
             if (studentTargetIndices[i] == 0 && distance < 0.1f)
             {
                 if (!hasOrdered)
                 {
-                    // Call TrayValidator to start the new order
                     if (trayValidator != null)
                     {
                         trayValidator.StartNewOrder();
                     }
                     else
                     {
-                        // Fallback to old behavior if TrayValidator isn't set
                         if (orderBubble != null) orderBubble.GenerateNewOrder();
                     }
                     hasOrdered = true;
@@ -96,18 +96,15 @@ public class QueueManager : MonoBehaviour
         }
     }
 
-    // CALL THIS FUNCTION when the order is complete
-    // TrayValidator will call this automatically when player places correct items on tray
     public void ShiftQueue()
     {
         hasOrdered = false; 
 
-        // Cycle spots
         for (int i = 0; i < students.Length; i++)
         {
-            if (studentTargetIndices[i] == 0) studentTargetIndices[i] = 4;      // Spot 1 -> Reset
-            else if (studentTargetIndices[i] == 4) studentTargetIndices[i] = 3; // Reset -> Spot 4
-            else studentTargetIndices[i] -= 1;                                  // Move Up
+            if (studentTargetIndices[i] == 0) studentTargetIndices[i] = 4;
+            else if (studentTargetIndices[i] == 4) studentTargetIndices[i] = 3;
+            else studentTargetIndices[i] -= 1;
         }
 
         Debug.Log("Queue shifted to next customer.");

@@ -19,7 +19,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &2801991015239960904
 Transform:
@@ -31,8 +31,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 2.3260002, y: -4.875, z: -0.52}
-  m_LocalScale: {x: 100, y: 100, z: 100}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 108, y: 108, z: 125}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -149,3 +149,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TrayValidator
   orderBubbleController: {fileID: 0}
   orderCompleteDelay: 2
+  drinkSocket1: {fileID: 0}
+  drinkSocket2: {fileID: 0}
+  bento1Socket: {fileID: 0}
+  bento2Socket: {fileID: 0}
+  appleSocket1: {fileID: 0}
+  appleSocket2: {fileID: 0}
+  appleSocket3: {fileID: 0}
+  bananaSocket1: {fileID: 0}
+  bananaSocket2: {fileID: 0}
+  bananaSocket3: {fileID: 0}
+  orangeSocket1: {fileID: 0}
+  orangeSocket2: {fileID: 0}
+  orangeSocket3: {fileID: 0}
+  strawberrySocket1: {fileID: 0}
+  strawberrySocket2: {fileID: 0}
+  strawberrySocket3: {fileID: 0}
+  snapDelay: 0.5
+  snapSpeed: 5
