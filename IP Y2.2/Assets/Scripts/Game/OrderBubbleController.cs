@@ -16,7 +16,7 @@ public class OrderBubbleController : MonoBehaviour
     [Header("Menu Items")]
     // Unified food pool: IDs 0-3 = Fruits, IDs 4-5 = Bentos
     [SerializeField] private string[] foodNames = { "Apple", "Banana", "Orange", "Strawberry", "Bento Set 1", "Bento Set 2" };
-    [SerializeField] private string[] drinkNames = { "Blueberry Drink", "Green Tea" };
+    [SerializeField] private string[] drinkNames = { "Blueberry Tea", "Green Tea" };
 
     [Header("Settings")]
     [SerializeField] private float typingSpeed = 0.05f; // Lower is faster

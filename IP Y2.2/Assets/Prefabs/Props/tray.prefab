@@ -133,7 +133,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.01, y: 0.001, z: 0.006}
+  m_Size: {x: 0.01, y: 0.002, z: 0.006}
   m_Center: {x: 0.000000007450581, y: 0.00023922138, z: 9.313226e-10}
 --- !u!114 &1117485644573904062
 MonoBehaviour:
@@ -147,6 +147,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a11f191d6b0883649bcf1c4f66e7e951, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrayValidator
+  orderProgressUI: {fileID: 0}
   orderBubbleController: {fileID: 0}
   orderCompleteDelay: 2
   drinkSocket1: {fileID: 0}

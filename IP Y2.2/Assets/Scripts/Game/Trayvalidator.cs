@@ -6,6 +6,7 @@ public class TrayValidator : MonoBehaviour
 {
     [Header("Dependencies")]
     [Tooltip("Reference to the OrderBubbleController script")]
+    [SerializeField] private OrderProgressUI orderProgressUI;
     [SerializeField] private OrderBubbleController orderBubbleController;
 
     [Header("Order Complete Settings")]
@@ -66,6 +67,11 @@ public class TrayValidator : MonoBehaviour
 
     public static TrayValidator Instance;
 
+    public Dictionary<string, int> GetItemsOnTray()
+    {
+        return new Dictionary<string, int>(itemsOnTray);
+    }
+
     private void Awake()
     {
         Instance = this;
@@ -104,6 +110,11 @@ public class TrayValidator : MonoBehaviour
         physicalItemsOnTray.Clear();
 
         orderActive = true;
+
+        if (orderProgressUI != null)
+        {
+            orderProgressUI.ShowOrderProgress();
+        }
 
         Debug.Log($"New Order: {requiredFoodQuantity}x {requiredFoodTag} + {requiredDrinkQuantity}x {requiredDrinkTag}");
     }
@@ -391,6 +402,11 @@ public class TrayValidator : MonoBehaviour
     private void OnOrderComplete()
     {
         orderActive = false;
+
+        if (orderProgressUI != null)
+        {
+            orderProgressUI.HideUI();
+        }
 
         if(orderBubbleController != null)
             orderBubbleController.HideOrder();
