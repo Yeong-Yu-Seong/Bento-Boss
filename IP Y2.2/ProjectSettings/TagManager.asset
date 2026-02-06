@@ -16,6 +16,13 @@ TagManager:
   - Bento1
   - Bento2
   - Banana
+  - Money_10Cent
+  - Money_20Cent
+  - Money_50Cent
+  - Money_1Dollar
+  - Money_2Dollar
+  - Money_5Dollar
+  - Money_10Dollar
   layers:
   - Default
   - TransparentFX
@@ -25,9 +32,9 @@ TagManager:
   - UI
   - Barriers
   - Walls
-  - 
-  - 
-  - 
+  - Sockets
+  - CashRegister
+  - XRControllers
   - 
   - 
   - 

@@ -279,6 +279,7 @@ GameObject:
   - component: {fileID: 6957746025545410539}
   - component: {fileID: 5343582500214821779}
   - component: {fileID: 5962305955688886364}
+  - component: {fileID: 7717136282569992238}
   m_Layer: 0
   m_Name: apple
   m_TagString: Apple
@@ -313,7 +314,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3945468801932764752}
   serializedVersion: 5
-  m_Mass: 5
+  m_Mass: 20
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -414,7 +415,7 @@ MonoBehaviour:
   m_SnapToColliderVolume: 1
   m_ReinitializeDynamicAttachEverySingleGrab: 1
   m_AttachEaseInTime: 0.15
-  m_MovementType: 2
+  m_MovementType: 0
   m_PredictedVisualsTransform: {fileID: 0}
   m_VelocityDamping: 1
   m_VelocityScale: 1
@@ -482,6 +483,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.008, y: 0.008, z: 0.008}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7717136282569992238
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3945468801932764752}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb1be773d75eb404c84e41a3ff5c6a3b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SocketKinematicFix
 --- !u!1 &4602927755927725273
 GameObject:
   m_ObjectHideFlags: 0

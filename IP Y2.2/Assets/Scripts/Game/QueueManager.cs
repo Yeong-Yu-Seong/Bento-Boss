@@ -1,5 +1,5 @@
 using UnityEngine;
-using System.Collections.Generic;
+using System.Collections;
 
 public class QueueManager : MonoBehaviour
 {
@@ -27,7 +27,7 @@ public class QueueManager : MonoBehaviour
 
     private void Start()
     {
-        if (students.Length == 0 || waypoints.Length < 5)
+        if (students.Length == 0 || waypoints.Length < 4)
         {
             Debug.LogError("QueueManager: Assign all students and waypoints in inspector.");
             return;
@@ -78,35 +78,37 @@ public class QueueManager : MonoBehaviour
                 );
             }
             
-            if (studentTargetIndices[i] == 0 && distance < 0.1f)
+            if (studentTargetIndices[i] == 0 && distance < 0.1f && !hasOrdered)
             {
-                if (!hasOrdered)
+                if (trayValidator != null)
                 {
-                    if (trayValidator != null)
-                    {
-                        trayValidator.StartNewOrder();
-                    }
-                    else
-                    {
-                        if (orderBubble != null) orderBubble.GenerateNewOrder();
-                    }
-                    hasOrdered = true;
+                    trayValidator.StartNewOrder();
                 }
+                else
+                {
+                    if (orderBubble != null) orderBubble.GenerateNewOrder();
+                }
+                hasOrdered = true;
             }
         }
     }
 
     public void ShiftQueue()
     {
-        hasOrdered = false; 
-
         for (int i = 0; i < students.Length; i++)
         {
-            if (studentTargetIndices[i] == 0) studentTargetIndices[i] = 4;
-            else if (studentTargetIndices[i] == 4) studentTargetIndices[i] = 3;
+            if (studentTargetIndices[i] == 0) studentTargetIndices[i] = 3;
+            else if (studentTargetIndices[i] == 3) studentTargetIndices[i] = 2;
             else studentTargetIndices[i] -= 1;
         }
 
+        StartCoroutine(ResetOrderFlag());
         Debug.Log("Queue shifted to next customer.");
+    }
+
+    private IEnumerator ResetOrderFlag()
+    {
+        yield return new WaitForSeconds(0.5f);
+        hasOrdered = false;
     }
 }

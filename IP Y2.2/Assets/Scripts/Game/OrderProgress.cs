@@ -27,6 +27,7 @@ public class OrderProgressUI : MonoBehaviour
     private int requiredDrinkQuantity;
     
     private bool orderActive = false;
+    private bool paymentMode = false;
 
     private void Start()
     {
@@ -43,7 +44,10 @@ public class OrderProgressUI : MonoBehaviour
         direction.y = 0;
         transform.rotation = Quaternion.LookRotation(direction);
         
-        UpdateProgressDisplay();
+        if (!paymentMode)
+        {
+            UpdateProgressDisplay();
+        }
     }
 
     public void ShowOrderProgress()
@@ -62,14 +66,35 @@ public class OrderProgressUI : MonoBehaviour
         
         if (progressPanel != null) progressPanel.SetActive(true);
         orderActive = true;
+        paymentMode = false;
         
         UpdateProgressDisplay();
+    }
+
+    public void ShowPaymentMessage(string message, float totalCost, float paymentReceived)
+    {
+        if (progressPanel != null) progressPanel.SetActive(true);
+        orderActive = true;
+        paymentMode = true;
+        
+        if (foodProgressText != null)
+        {
+            foodProgressText.text = $"Total Cost: ${totalCost:F2}";
+            foodProgressText.color = Color.white;
+        }
+        
+        if (drinkProgressText != null)
+        {
+            drinkProgressText.text = $"Payment Received: ${paymentReceived:F2}";
+            drinkProgressText.color = Color.white;
+        }
     }
 
     public void HideUI()
     {
         if (progressPanel != null) progressPanel.SetActive(false);
         orderActive = false;
+        paymentMode = false;
     }
 
     private void UpdateProgressDisplay()

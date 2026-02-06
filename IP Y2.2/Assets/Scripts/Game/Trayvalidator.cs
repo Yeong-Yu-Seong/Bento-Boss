@@ -11,7 +11,6 @@ public class TrayValidator : MonoBehaviour
 
     [Header("Order Complete Settings")]
     [Tooltip("Delay before moving to next customer after order complete (seconds)")]
-    [SerializeField] private float orderCompleteDelay = 2f;
 
     [Header("Socket References")]
     [Header("Drink Sockets")]
@@ -56,6 +55,10 @@ public class TrayValidator : MonoBehaviour
 
     private bool orderActive = false;
 
+    private bool paymentPhase = false;
+    private float requiredChange = 0f;
+    private float collectedChange = 0f;
+
     private readonly string[] foodTags = { "Apple", "Banana", "Orange", "Strawberry", "Bento1", "Bento2" };
     private readonly string[] drinkTags = { "Blueberry", "GreenTea" };
 
@@ -64,6 +67,7 @@ public class TrayValidator : MonoBehaviour
     
     private Dictionary<Transform, GameObject> socketOccupancy = new Dictionary<Transform, GameObject>();
     private Dictionary<GameObject, Transform> itemToSocket = new Dictionary<GameObject, Transform>();
+    private List<GameObject> collectedMoney = new List<GameObject>();
 
     public static TrayValidator Instance;
 
@@ -152,7 +156,7 @@ public class TrayValidator : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!orderActive) return;
+        if (!orderActive && !paymentPhase) return;
         if (other == null) return;
 
         GameObject itemObj = other.attachedRigidbody ? other.attachedRigidbody.gameObject : other.gameObject;
@@ -161,6 +165,32 @@ public class TrayValidator : MonoBehaviour
         if (other.gameObject != itemObj) return;
 
         string tag = itemObj.tag;
+
+        // Payment phase: detect money
+        if (paymentPhase)
+        {
+            float moneyValue = GetMoneyValue(tag);
+            if (moneyValue > 0f)
+            {
+                if (!collectedMoney.Contains(itemObj))
+                {
+                    collectedMoney.Add(itemObj);
+                    collectedChange += moneyValue;
+                    
+                    
+                    Rigidbody rb = itemObj.GetComponent<Rigidbody>();
+                    if (rb != null)
+                    {
+                        rb.isKinematic = true;
+                        rb.useGravity = false;
+                    }
+                    
+                    Debug.Log($"Change collected: ${moneyValue:F2}, Total: ${collectedChange:F2}");
+                    ValidateChange();
+                }
+            }
+            return;
+        }
 
         if (IsFoodOrDrinkTag(tag))
         {
@@ -212,15 +242,34 @@ public class TrayValidator : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (!orderActive) return;
+        if (!orderActive && !paymentPhase) return;
         if (other == null) return;
-
         GameObject itemObj = other.attachedRigidbody ? other.attachedRigidbody.gameObject : other.gameObject;
         
         if (itemObj == null) return;
         if (other.gameObject != itemObj) return;
-
         string tag = itemObj.tag;
+        
+        // Handle money removal during payment phase ONLY if payment phase is still active
+        if (paymentPhase && collectedMoney.Contains(itemObj))
+        {
+            float moneyValue = GetMoneyValue(tag);
+            if (moneyValue > 0f)
+            {
+                collectedMoney.Remove(itemObj);
+                collectedChange -= moneyValue;
+                
+                Rigidbody rb = itemObj.GetComponent<Rigidbody>();
+                if (rb != null)
+                {
+                    rb.isKinematic = false;
+                    rb.useGravity = true;
+                }
+                
+                Debug.Log($"Money removed: ${moneyValue:F2}, Remaining: ${collectedChange:F2}");
+            }
+            return;
+        }
 
         if (physicalItemsOnTray.Contains(itemObj))
         {
@@ -408,23 +457,18 @@ public class TrayValidator : MonoBehaviour
             orderProgressUI.HideUI();
         }
 
-        if(orderBubbleController != null)
-            orderBubbleController.HideOrder();
-
-        Invoke(nameof(CompleteOrderSequence), orderCompleteDelay);
+        StartCoroutine(ClearItemsBeforePayment());
     }
 
-    private void CompleteOrderSequence()
+    private IEnumerator ClearItemsBeforePayment()
     {
+        yield return new WaitForSeconds(1f);
+        
         ClearPhysicalItems();
-
-        if (QueueManager.Instance != null)
+        
+        if (PaymentHandler.Instance != null)
         {
-            QueueManager.Instance.ShiftQueue();
-        }
-        else
-        {
-            Debug.LogWarning("TrayValidator: QueueManager.Instance is null!");
+            PaymentHandler.Instance.StartPaymentPhase();
         }
     }
 
@@ -455,5 +499,80 @@ public class TrayValidator : MonoBehaviour
         
         physicalItemsOnTray.Clear();
         itemsOnTray.Clear();
+    }
+
+    public void StartPaymentPhase(float changeAmount)
+    {
+        paymentPhase = true;
+        requiredChange = changeAmount;
+        collectedChange = 0f;
+        Debug.Log($"Payment phase started. Required change: ${requiredChange:F2}");
+    }
+
+    private float GetMoneyValue(string tag)
+    {
+        if (tag == "Money_10Cent") return 0.10f;
+        if (tag == "Money_20Cent") return 0.20f;
+        if (tag == "Money_50Cent") return 0.50f;
+        if (tag == "Money_1Dollar") return 1.00f;
+        if (tag == "Money_2Dollar") return 2.00f;
+        if (tag == "Money_5Dollar") return 5.00f;
+        if (tag == "Money_10Dollar") return 10.00f;
+        return 0f;
+    }
+
+    private void ValidateChange()
+    {
+        float difference = Mathf.Abs(collectedChange - requiredChange);
+        
+        if (difference < 0.01f)
+        {
+            paymentPhase = false;
+            if (PaymentHandler.Instance != null)
+            {
+                PaymentHandler.Instance.OnChangeValidated(true, collectedChange);
+            }
+            
+            StartCoroutine(DeleteMoneyAfterDelay());
+        }
+        else if (collectedChange > requiredChange + 0.01f)
+        {
+            if (PaymentHandler.Instance != null)
+            {
+                PaymentHandler.Instance.OnChangeValidated(false, collectedChange);
+            }
+            
+            foreach (GameObject money in collectedMoney)
+            {
+                if (money != null)
+                {
+                    Rigidbody rb = money.GetComponent<Rigidbody>();
+                    if (rb != null)
+                    {
+                        rb.isKinematic = false;
+                        rb.useGravity = true;
+                    }
+                }
+            }
+            collectedMoney.Clear();
+            collectedChange = 0f;
+        }
+    }
+
+    private IEnumerator DeleteMoneyAfterDelay()
+    {
+        yield return new WaitForSeconds(2f);
+        
+        foreach (GameObject money in collectedMoney)
+        {
+            if (money != null)
+            {
+                Destroy(money);
+            }
+        }
+        collectedMoney.Clear();
+        
+        paymentPhase = false;
+        collectedChange = 0f;
     }
 }

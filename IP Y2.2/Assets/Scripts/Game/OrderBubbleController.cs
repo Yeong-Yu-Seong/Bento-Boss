@@ -102,6 +102,14 @@ public class OrderBubbleController : MonoBehaviour
         typingCoroutine = StartCoroutine(TypewriterEffect(fullSentence));
     }
 
+    public void ShowPayment(float amount)
+    {
+        string paymentText = $"Here's ${amount:F2}";
+        
+        if (typingCoroutine != null) StopCoroutine(typingCoroutine);
+        typingCoroutine = StartCoroutine(TypewriterEffect(paymentText));
+    }
+
     // --- SHUFFLED BAG METHODS ---
 
     // Fills a deck with one copy of each ID (0 to count-1), then shuffles it
