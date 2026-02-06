@@ -727,6 +727,12 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   stockText: {fileID: 675254895070282658}
   uiButton: {fileID: 863937287739344535}
   cratePrefab: {fileID: 3819973886462644916, guid: 594062320466cb24891cf8a147b74bf7, type: 3}
