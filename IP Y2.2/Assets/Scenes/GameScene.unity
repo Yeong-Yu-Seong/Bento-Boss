@@ -102539,6 +102539,7 @@ MonoBehaviour:
   profitText: {fileID: 1887280430}
   progressSlider: {fileID: 1037731374}
   sliderFillImage: {fileID: 971492432}
+  mainCamera: {fileID: 415435430}
   startingProfit: 10
   dailyGoal: 50
   defaultColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
@@ -115768,6 +115769,7 @@ MonoBehaviour:
   orderBubbleController: {fileID: 1997597479}
   incompleteColor: {r: 1, g: 0.71, b: 0.39, a: 1}
   completeColor: {r: 0.39, g: 1, b: 0.39, a: 1}
+  excessColor: {r: 1, g: 0.39, b: 0.39, a: 1}
 --- !u!1001 &1681735865
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -133153,7 +133155,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2239446301258972458, guid: af9e34f4652d0f745b2da04197aceed1, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.11400032
+      value: -0.115
       objectReference: {fileID: 0}
     - target: {fileID: 2239446301258972458, guid: af9e34f4652d0f745b2da04197aceed1, type: 3}
       propertyPath: m_LocalRotation.w
@@ -133182,10 +133184,6 @@ PrefabInstance:
     - target: {fileID: 2239446301258972458, guid: af9e34f4652d0f745b2da04197aceed1, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6848474119544667915, guid: af9e34f4652d0f745b2da04197aceed1, type: 3}
-      propertyPath: m_Enabled
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

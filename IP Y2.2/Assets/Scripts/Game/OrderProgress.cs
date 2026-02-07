@@ -4,124 +4,143 @@ using System.Collections.Generic;
 
 public class OrderProgressUI : MonoBehaviour
 {
-    [Header("UI References")]
-    [SerializeField] private GameObject progressPanel;
-    [SerializeField] private TextMeshProUGUI foodProgressText;
-    [SerializeField] private TextMeshProUGUI drinkProgressText;
-    
-    [Header("Dependencies")]
-    [SerializeField] private Camera mainCamera;
-    [SerializeField] private TrayValidator trayValidator;
-    [SerializeField] private OrderBubbleController orderBubbleController;
-    
-    [Header("Color Settings")]
-    [SerializeField] private Color incompleteColor = new Color(1f, 0.71f, 0.39f);
-    [SerializeField] private Color completeColor = new Color(0.39f, 1f, 0.39f);
-    
-    private readonly string[] foodTags = { "Apple", "Banana", "Orange", "Strawberry", "Bento1", "Bento2" };
-    private readonly string[] drinkTags = { "Blueberry", "GreenTea" };
-    
-    private string requiredFoodTag;
-    private int requiredFoodQuantity;
-    private string requiredDrinkTag;
-    private int requiredDrinkQuantity;
-    
-    private bool orderActive = false;
-    private bool paymentMode = false;
+  [Header("UI References")]
+  [SerializeField] private GameObject progressPanel;
+  [SerializeField] private TextMeshProUGUI foodProgressText;
+  [SerializeField] private TextMeshProUGUI drinkProgressText;
 
-    private void Start()
+  [Header("Dependencies")]
+  [SerializeField] private Camera mainCamera;
+  [SerializeField] private TrayValidator trayValidator;
+  [SerializeField] private OrderBubbleController orderBubbleController;
+
+  [Header("Color Settings")]
+  [SerializeField] private Color incompleteColor = new Color(1f, 0.71f, 0.39f);
+  [SerializeField] private Color completeColor = new Color(0.39f, 1f, 0.39f);
+  [SerializeField] private Color excessColor = new Color(1f, 0.39f, 0.39f);
+
+  private readonly string[] foodTags = { "Apple", "Banana", "Orange", "Strawberry", "Bento1", "Bento2" };
+  private readonly string[] drinkTags = { "Blueberry", "GreenTea" };
+
+  private string requiredFoodTag;
+  private int requiredFoodQuantity;
+  private string requiredDrinkTag;
+  private int requiredDrinkQuantity;
+
+  private bool orderActive = false;
+  private bool paymentMode = false;
+
+  // Dirty tracking to avoid rebuilding UI every frame
+  private int lastFoodCount = -1;
+  private int lastDrinkCount = -1;
+
+  // Cached display names (computed once per order)
+  private string cachedFoodDisplayName;
+  private string cachedDrinkDisplayName;
+
+  private void Start()
+  {
+    if (mainCamera == null) mainCamera = Camera.main;
+
+    if (progressPanel != null) progressPanel.SetActive(false);
+  }
+
+  private void Update()
+  {
+    if (!orderActive || mainCamera == null) return;
+
+    Vector3 direction = mainCamera.transform.position - transform.position;
+    direction.y = 0;
+    transform.rotation = Quaternion.LookRotation(direction);
+
+    if (!paymentMode)
     {
-        if (mainCamera == null) mainCamera = Camera.main;
-        
-        if (progressPanel != null) progressPanel.SetActive(false);
+      UpdateProgressDisplay();
+    }
+  }
+
+  public void ShowOrderProgress()
+  {
+    if (orderBubbleController == null) return;
+
+    int foodID = orderBubbleController.requiredFoodID;
+    int drinkID = orderBubbleController.requiredDrinkID;
+
+    if (foodID < 0 || foodID >= foodTags.Length || drinkID < 0 || drinkID >= drinkTags.Length) return;
+
+    requiredFoodTag = foodTags[foodID];
+    requiredFoodQuantity = orderBubbleController.requiredFoodQuantity;
+    requiredDrinkTag = drinkTags[drinkID];
+    requiredDrinkQuantity = orderBubbleController.requiredDrinkQuantity;
+
+    // Cache display names once per order
+    cachedFoodDisplayName = requiredFoodTag == "Bento1" ? "Bento Set 1" :
+                            requiredFoodTag == "Bento2" ? "Bento Set 2" : requiredFoodTag;
+    cachedDrinkDisplayName = requiredDrinkTag == "GreenTea" ? "Green Tea" :
+                             requiredDrinkTag == "Blueberry" ? "Blueberry Tea" : requiredDrinkTag;
+
+    // Reset dirty tracking so first UpdateProgressDisplay runs
+    lastFoodCount = -1;
+    lastDrinkCount = -1;
+
+    if (progressPanel != null) progressPanel.SetActive(true);
+    orderActive = true;
+    paymentMode = false;
+
+    UpdateProgressDisplay();
+  }
+
+  public void ShowPaymentMessage(string message, float totalCost, float paymentReceived)
+  {
+    if (progressPanel != null) progressPanel.SetActive(true);
+    orderActive = true;
+    paymentMode = true;
+
+    if (foodProgressText != null)
+    {
+      foodProgressText.text = $"Total Cost: ${totalCost:F2}";
+      foodProgressText.color = Color.white;
     }
 
-    private void Update()
+    if (drinkProgressText != null)
     {
-        if (!orderActive || mainCamera == null) return;
+      drinkProgressText.text = $"Payment Received: ${paymentReceived:F2}";
+      drinkProgressText.color = Color.white;
+    }
+  }
 
-        Vector3 direction = mainCamera.transform.position - transform.position;
-        direction.y = 0;
-        transform.rotation = Quaternion.LookRotation(direction);
-        
-        if (!paymentMode)
-        {
-            UpdateProgressDisplay();
-        }
+  public void HideUI()
+  {
+    if (progressPanel != null) progressPanel.SetActive(false);
+    orderActive = false;
+    paymentMode = false;
+  }
+
+  private void UpdateProgressDisplay()
+  {
+    if (trayValidator == null) return;
+
+    var items = trayValidator.GetItemsOnTray();
+
+    int foodCount = items.ContainsKey(requiredFoodTag) ? items[requiredFoodTag] : 0;
+    int drinkCount = items.ContainsKey(requiredDrinkTag) ? items[requiredDrinkTag] : 0;
+
+    if (foodCount == lastFoodCount && drinkCount == lastDrinkCount) return;
+    lastFoodCount = foodCount;
+    lastDrinkCount = drinkCount;
+
+    if (foodProgressText != null)
+    {
+      foodProgressText.text = $"{foodCount}/{requiredFoodQuantity} {cachedFoodDisplayName}";
+      foodProgressText.color = foodCount > requiredFoodQuantity ? excessColor :
+                               foodCount >= requiredFoodQuantity ? completeColor : incompleteColor;
     }
 
-    public void ShowOrderProgress()
+    if (drinkProgressText != null)
     {
-        if (orderBubbleController == null) return;
-        
-        int foodID = orderBubbleController.requiredFoodID;
-        int drinkID = orderBubbleController.requiredDrinkID;
-        
-        if (foodID < 0 || foodID >= foodTags.Length || drinkID < 0 || drinkID >= drinkTags.Length) return;
-        
-        requiredFoodTag = foodTags[foodID];
-        requiredFoodQuantity = orderBubbleController.requiredFoodQuantity;
-        requiredDrinkTag = drinkTags[drinkID];
-        requiredDrinkQuantity = orderBubbleController.requiredDrinkQuantity;
-        
-        if (progressPanel != null) progressPanel.SetActive(true);
-        orderActive = true;
-        paymentMode = false;
-        
-        UpdateProgressDisplay();
+      drinkProgressText.text = $"{drinkCount}/{requiredDrinkQuantity} {cachedDrinkDisplayName}";
+      drinkProgressText.color = drinkCount > requiredDrinkQuantity ? excessColor :
+                                drinkCount >= requiredDrinkQuantity ? completeColor : incompleteColor;
     }
-
-    public void ShowPaymentMessage(string message, float totalCost, float paymentReceived)
-    {
-        if (progressPanel != null) progressPanel.SetActive(true);
-        orderActive = true;
-        paymentMode = true;
-        
-        if (foodProgressText != null)
-        {
-            foodProgressText.text = $"Total Cost: ${totalCost:F2}";
-            foodProgressText.color = Color.white;
-        }
-        
-        if (drinkProgressText != null)
-        {
-            drinkProgressText.text = $"Payment Received: ${paymentReceived:F2}";
-            drinkProgressText.color = Color.white;
-        }
-    }
-
-    public void HideUI()
-    {
-        if (progressPanel != null) progressPanel.SetActive(false);
-        orderActive = false;
-        paymentMode = false;
-    }
-
-    private void UpdateProgressDisplay()
-    {
-        if (trayValidator == null) return;
-        
-        var items = trayValidator.GetItemsOnTray();
-        
-        int foodCount = items.ContainsKey(requiredFoodTag) ? items[requiredFoodTag] : 0;
-        int drinkCount = items.ContainsKey(requiredDrinkTag) ? items[requiredDrinkTag] : 0;
-        
-        if (foodProgressText != null)
-        {
-            string foodDisplayName = requiredFoodTag == "Bento1" ? "Bento Set 1" :
-                                    requiredFoodTag == "Bento2" ? "Bento Set 2" : requiredFoodTag;
-            
-            foodProgressText.text = $"{foodCount}/{requiredFoodQuantity} {foodDisplayName}";
-            foodProgressText.color = (foodCount >= requiredFoodQuantity) ? completeColor : incompleteColor;
-        }
-        
-        if (drinkProgressText != null)
-        {
-            string drinkDisplayName = requiredDrinkTag == "GreenTea" ? "Green Tea" : 
-                                    requiredDrinkTag == "Blueberry" ? "Blueberry Tea" : requiredDrinkTag;
-            
-            drinkProgressText.text = $"{drinkCount}/{requiredDrinkQuantity} {drinkDisplayName}";
-            drinkProgressText.color = (drinkCount >= requiredDrinkQuantity) ? completeColor : incompleteColor;
-        }
-    }
+  }
 }

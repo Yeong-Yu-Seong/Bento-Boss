@@ -909,9 +909,9 @@ MonoBehaviour:
     m_ManualQueueTargetFrame: 0
   m_GripAmount: 1
   m_TriggerAmount: 1
-  m_TranslateXSpeed: 0.2
+  m_TranslateXSpeed: 0.4
   m_TranslateYSpeed: 0.2
-  m_TranslateZSpeed: 0.2
+  m_TranslateZSpeed: 0.4
   m_BodyTranslateMultiplier: 5
   m_RotateXSensitivity: 0.2
   m_RotateYSensitivity: 0.2
@@ -968,7 +968,7 @@ MonoBehaviour:
         m_SingletonActionBindings: []
         m_Flags: 0
       m_InputActionReferencePerformed: {fileID: -5976510165261225158, guid: 1f7ec93f6b8c84f5981db5008b5859cd, type: 3}
-      m_InputActionReferenceValue: {fileID: -5976510165261225158, guid: b72ab2a46d9094be38774d023beb4d34, type: 3}
+      m_InputActionReferenceValue: {fileID: 0}
       m_ObjectReferenceObject: {fileID: 0}
       m_ManualPerformed: 0
       m_ManualValue: 0
@@ -1033,8 +1033,8 @@ MonoBehaviour:
         m_Interactions: 
         m_SingletonActionBindings: []
         m_Flags: 0
-      m_InputActionReferencePerformed: {fileID: -4373459253818063952, guid: b72ab2a46d9094be38774d023beb4d34, type: 3}
-      m_InputActionReferenceValue: {fileID: -4373459253818063952, guid: b72ab2a46d9094be38774d023beb4d34, type: 3}
+      m_InputActionReferencePerformed: {fileID: 0}
+      m_InputActionReferenceValue: {fileID: 0}
       m_ObjectReferenceObject: {fileID: 0}
       m_ManualPerformed: 0
       m_ManualValue: 0
@@ -1066,8 +1066,8 @@ MonoBehaviour:
         m_Interactions: 
         m_SingletonActionBindings: []
         m_Flags: 0
-      m_InputActionReferencePerformed: {fileID: -741559036651486339, guid: b72ab2a46d9094be38774d023beb4d34, type: 3}
-      m_InputActionReferenceValue: {fileID: -741559036651486339, guid: b72ab2a46d9094be38774d023beb4d34, type: 3}
+      m_InputActionReferencePerformed: {fileID: 0}
+      m_InputActionReferenceValue: {fileID: 0}
       m_ObjectReferenceObject: {fileID: 0}
       m_ManualPerformed: 0
       m_ManualValue: 0
@@ -1099,8 +1099,8 @@ MonoBehaviour:
         m_Interactions: 
         m_SingletonActionBindings: []
         m_Flags: 0
-      m_InputActionReferencePerformed: {fileID: -9192331390769138535, guid: b72ab2a46d9094be38774d023beb4d34, type: 3}
-      m_InputActionReferenceValue: {fileID: -9192331390769138535, guid: b72ab2a46d9094be38774d023beb4d34, type: 3}
+      m_InputActionReferencePerformed: {fileID: 0}
+      m_InputActionReferenceValue: {fileID: 0}
       m_ObjectReferenceObject: {fileID: 0}
       m_ManualPerformed: 0
       m_ManualValue: 0
@@ -1132,8 +1132,8 @@ MonoBehaviour:
         m_Interactions: 
         m_SingletonActionBindings: []
         m_Flags: 0
-      m_InputActionReferencePerformed: {fileID: 6469712917552426222, guid: b72ab2a46d9094be38774d023beb4d34, type: 3}
-      m_InputActionReferenceValue: {fileID: 6469712917552426222, guid: b72ab2a46d9094be38774d023beb4d34, type: 3}
+      m_InputActionReferencePerformed: {fileID: 0}
+      m_InputActionReferenceValue: {fileID: 0}
       m_ObjectReferenceObject: {fileID: 0}
       m_ManualPerformed: 0
       m_ManualValue: 0

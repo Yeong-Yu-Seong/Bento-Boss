@@ -16,8 +16,11 @@ public class EarningsTracker : MonoBehaviour
     [Tooltip("Assign the 'Fill' image inside the Slider to change color on completion")]
     [SerializeField] private Image sliderFillImage;
 
+    [Header("Billboard Settings")]
+    [SerializeField] private Camera mainCamera;
+
     [Header("Settings")]
-    [SerializeField] private float startingProfit = 10f; // Starts at $10.00
+    [SerializeField] private float startingProfit = 10f;
     [SerializeField] private float dailyGoal = 50f;
     [SerializeField] private Color defaultColor = Color.yellow;
     [SerializeField] private Color goalReachedColor = Color.green;
@@ -36,10 +39,19 @@ public class EarningsTracker : MonoBehaviour
 
     private void Start()
     {
-        // Initialize profit with the starting value
+        if (mainCamera == null) mainCamera = Camera.main;
+
         _currentProfit = startingProfit;
-        
         InitializeUI();
+    }
+
+    private void Update()
+    {
+        if (mainCamera == null) return;
+
+        Vector3 direction = mainCamera.transform.position - transform.position;
+        direction.y = 0;
+        transform.rotation = Quaternion.LookRotation(direction);
     }
 
     private void InitializeUI()
@@ -55,7 +67,6 @@ public class EarningsTracker : MonoBehaviour
             sliderFillImage.color = defaultColor;
         }
 
-        // Force an immediate UI update so it shows $10.00 / $50.00 on start
         UpdateUI();
     }
 
@@ -74,7 +85,6 @@ public class EarningsTracker : MonoBehaviour
 
     private void UpdateUI()
     {
-        // Updates text to format: $10.00 / $50.00
         if (profitText != null)
         {
             profitText.text = $"${_currentProfit:F2} / ${dailyGoal:F2}";
