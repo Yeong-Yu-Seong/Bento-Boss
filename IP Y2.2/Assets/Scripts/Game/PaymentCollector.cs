@@ -18,6 +18,8 @@ public class PaymentCollector : MonoBehaviour
 
   private void OnTriggerEnter(Collider other)
   {
+    if (other.gameObject.layer != LayerMask.NameToLayer("CustomerPayment")) return;
+
     float value = GetMoneyValue(other.tag);
 
     if (value > 0f)

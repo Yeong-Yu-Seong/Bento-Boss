@@ -93,6 +93,16 @@ public class TrayValidator : MonoBehaviour
     return itemsOnTray;
   }
 
+  public float GetCollectedChange()
+  {
+    return collectedChange;
+  }
+
+  public bool IsMoneyCollected(GameObject obj)
+  {
+    return paymentPhase && collectedMoneySet.Contains(obj);
+  }
+
   private Rigidbody GetCachedRigidbody(GameObject obj)
   {
     if (!rbCache.TryGetValue(obj, out Rigidbody rb))
@@ -206,13 +216,6 @@ public class TrayValidator : MonoBehaviour
           collectedMoneySet.Add(itemObj);
           collectedChange += moneyValue;
 
-          Rigidbody rb = GetCachedRigidbody(itemObj);
-          if (rb != null)
-          {
-            rb.isKinematic = true;
-            rb.useGravity = false;
-          }
-
           Debug.Log($"Change collected: ${moneyValue:F2}, Total: ${collectedChange:F2}");
           ValidateChange();
         }
@@ -244,21 +247,21 @@ public class TrayValidator : MonoBehaviour
               {
                   socketOccupancy[targetSocket] = itemObj;
                   itemToSocket[itemObj] = targetSocket;
-      
+
                   Rigidbody rb = GetCachedRigidbody(itemObj);
                   if (rb != null)
                   {
                       rb.useGravity = false;
-      
+
                       if (!rb.isKinematic)
                       {
                           rb.linearVelocity = Vector3.zero;
                           rb.angularVelocity = Vector3.zero;
                       }
-      
+
                       rb.isKinematic = true;
                   }
-      
+
                   Coroutine snapCoroutine = StartCoroutine(SnapToSocketAfterDelay(itemObj, targetSocket));
                   pendingSnaps[itemObj] = snapCoroutine;
               }
@@ -274,11 +277,11 @@ public class TrayValidator : MonoBehaviour
       if (!orderActive && !paymentPhase) return;
       if (other == null) return;
       GameObject itemObj = other.attachedRigidbody ? other.attachedRigidbody.gameObject : other.gameObject;
-  
+
       if (itemObj == null) return;
       if (other.gameObject != itemObj) return;
       string tag = itemObj.tag;
-  
+
       // Handle money removal during payment phase
       if (paymentPhase && collectedMoneySet.Contains(itemObj))
       {
@@ -288,19 +291,19 @@ public class TrayValidator : MonoBehaviour
               collectedMoney.Remove(itemObj);
               collectedMoneySet.Remove(itemObj);
               collectedChange -= moneyValue;
-  
+
               Rigidbody moneyRb = GetCachedRigidbody(itemObj); // Renamed for safety
               if (moneyRb != null)
               {
                   moneyRb.isKinematic = false;
                   moneyRb.useGravity = true;
               }
-  
+
               Debug.Log($"Money removed: ${moneyValue:F2}, Remaining: ${collectedChange:F2}");
           }
           return;
       }
-  
+
       if (physicalItemsSet.Contains(itemObj))
       {
           if (itemToSocket.TryGetValue(itemObj, out Transform assignedSocket))
@@ -311,44 +314,44 @@ public class TrayValidator : MonoBehaviour
                   return;
               }
           }
-  
+
           if (pendingSnaps.ContainsKey(itemObj))
           {
               StopCoroutine(pendingSnaps[itemObj]);
               pendingSnaps.Remove(itemObj);
           }
-  
+
           if (snappedItems.Contains(itemObj))
           {
               snappedItems.Remove(itemObj);
           }
-  
+
           if (itemToSocket.ContainsKey(itemObj))
           {
               Transform socket = itemToSocket[itemObj];
               socketOccupancy.Remove(socket);
               itemToSocket.Remove(itemObj);
           }
-  
+
           Rigidbody rb = GetCachedRigidbody(itemObj);
           if (rb != null)
           {
               rb.isKinematic = false;
               rb.useGravity = true;
           }
-  
+
           physicalItemsOnTray.Remove(itemObj);
           physicalItemsSet.Remove(itemObj);
-  
+
           if (itemsOnTray.TryGetValue(tag, out int count2))
           {
               count2--;
               if (count2 <= 0) itemsOnTray.Remove(tag);
               else itemsOnTray[tag] = count2;
           }
-  
+
           Debug.Log($"Removed {tag} (remaining: {(itemsOnTray.TryGetValue(tag, out int rem) ? rem : 0)})");
-  
+
           ValidateOrder();
       }
   }
@@ -375,7 +378,7 @@ public class TrayValidator : MonoBehaviour
   private bool IsSocketPhysicallyOccupied(Transform socket)
   {
       if (socketOccupancy.ContainsKey(socket)) return true;
-  
+
       foreach (GameObject item in physicalItemsSet)
       {
           if (item != null && Vector3.SqrMagnitude(item.transform.position - socket.position) < 0.05f)
@@ -387,7 +390,7 @@ public class TrayValidator : MonoBehaviour
       }
       return false;
   }
-  
+
   private Transform GetSocketForItem(string itemTag, GameObject item)
   {
       if (itemTag == "Blueberry" || itemTag == "GreenTea")
@@ -396,19 +399,19 @@ public class TrayValidator : MonoBehaviour
           if (!IsSocketPhysicallyOccupied(drinkSocket2)) return drinkSocket2;
           return null;
       }
-  
+
       if (itemTag == "Bento1")
       {
           if (!IsSocketPhysicallyOccupied(bento1Socket)) return bento1Socket;
           return null;
       }
-  
+
       if (itemTag == "Bento2")
       {
           if (!IsSocketPhysicallyOccupied(bento2Socket)) return bento2Socket;
           return null;
       }
-  
+
       if (itemTag == "Apple")
       {
           if (!IsSocketPhysicallyOccupied(appleSocket1)) return appleSocket1;
@@ -416,7 +419,7 @@ public class TrayValidator : MonoBehaviour
           if (!IsSocketPhysicallyOccupied(appleSocket3)) return appleSocket3;
           return null;
       }
-  
+
       if (itemTag == "Banana")
       {
           if (!IsSocketPhysicallyOccupied(bananaSocket1)) return bananaSocket1;
@@ -424,7 +427,7 @@ public class TrayValidator : MonoBehaviour
           if (!IsSocketPhysicallyOccupied(bananaSocket3)) return bananaSocket3;
           return null;
       }
-  
+
       if (itemTag == "Orange")
       {
           if (!IsSocketPhysicallyOccupied(orangeSocket1)) return orangeSocket1;
@@ -432,7 +435,7 @@ public class TrayValidator : MonoBehaviour
           if (!IsSocketPhysicallyOccupied(orangeSocket3)) return orangeSocket3;
           return null;
       }
-  
+
       if (itemTag == "Strawberry")
       {
           if (!IsSocketPhysicallyOccupied(strawberrySocket1)) return strawberrySocket1;
@@ -440,7 +443,7 @@ public class TrayValidator : MonoBehaviour
           if (!IsSocketPhysicallyOccupied(strawberrySocket3)) return strawberrySocket3;
           return null;
       }
-  
+
       return null;
   }
 
@@ -449,29 +452,29 @@ public class TrayValidator : MonoBehaviour
       float elapsedTime = 0f;
       Vector3 startPos = item.transform.position;
       Quaternion startRot = item.transform.rotation;
-  
+
       while (elapsedTime < snapDelay)
       {
           if (item == null || !physicalItemsSet.Contains(item))
           {
               yield break;
           }
-  
+
           // Stop lerping if socket was reassigned to another item during animation
           if (!socketOccupancy.TryGetValue(socket, out GameObject owner) || owner != item)
           {
               yield break;
           }
-  
+
           elapsedTime += Time.deltaTime;
           float t = Mathf.Clamp01(elapsedTime / snapDelay);
-  
+
           item.transform.position = Vector3.Lerp(startPos, socket.position, t);
           item.transform.rotation = Quaternion.Lerp(startRot, socket.rotation, t);
-  
+
           yield return null;
       }
-  
+
       if (item != null)
       {
           // Verify this socket still belongs to this item (not stolen during lerp)
@@ -492,7 +495,7 @@ public class TrayValidator : MonoBehaviour
               }
           }
       }
-  
+
       if (pendingSnaps.ContainsKey(item))
       {
           pendingSnaps.Remove(item);

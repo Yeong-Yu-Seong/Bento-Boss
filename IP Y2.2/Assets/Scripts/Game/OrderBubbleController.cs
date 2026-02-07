@@ -19,6 +19,17 @@ public class OrderBubbleController : MonoBehaviour
   [SerializeField] private string[] foodNames = { "Apple", "Banana", "Orange", "Strawberry", "Bento Set 1", "Bento Set 2" };
   [SerializeField] private string[] drinkNames = { "Blueberry Tea", "Green Tea" };
 
+  [Header("Payment Phrases")]
+  [SerializeField]
+  private string[] paymentPhrases =
+  {
+    "Thank you so much!\nHere's $",
+    "This looks great!\nHere's $",
+    "Perfect, thank you!\nHere's $",
+    "Appreciate it!\nHere's $",
+    "You're the best!\nHere's $"
+  };
+
   [Header("Settings")]
   [SerializeField] private float typingSpeed = 0.05f; // Lower is faster
 
@@ -37,6 +48,7 @@ public class OrderBubbleController : MonoBehaviour
   // --- SHUFFLED BAG SYSTEM ---
   private List<int> foodDeck = new List<int>();
   private List<int> drinkDeck = new List<int>();
+  private List<int> paymentDeck = new List<int>();
 
   // --- FOOD HISTORY (tracks last 2 draws) ---
   private int lastFoodID1 = -1;   // Most recent food ID drawn
@@ -75,6 +87,7 @@ public class OrderBubbleController : MonoBehaviour
     // --- Initialize and shuffle both decks on Start ---
     RebuildAndShuffle(foodDeck, foodNames.Length);   // 6 cards: [0,1,2,3,4,5]
     RebuildAndShuffle(drinkDeck, drinkNames.Length); // 2 cards: [0,1]
+    RebuildAndShuffle(paymentDeck, paymentPhrases.Length); // 5 cards: [0,1,2,3,4]
   }
 
   private void Update()
@@ -94,8 +107,22 @@ public class OrderBubbleController : MonoBehaviour
     //    Fruit  -> 1 to 3
     //    Bento  -> always 1
     //    Drink  -> 1 to 2
-    int foodCategory = GetFoodCategory(foodIndex);
-    requiredFoodQuantity = (foodCategory == 0) ? Random.Range(1, 4) : 1; // Fruit: 1-3, Bento: 1
+    switch (foodIndex)
+    {
+      case 0: // Apple
+      case 1: // Banana
+        requiredFoodQuantity = Random.Range(1, 4); // 1-3
+        break;
+      case 2: // Orange
+      case 3: // Strawberry
+        requiredFoodQuantity = Random.Range(2, 4); // 2-3
+        break;
+      case 4: // Bento Set 1
+      case 5: // Bento Set 2
+      default:
+        requiredFoodQuantity = 1;
+        break;
+    }
     requiredDrinkQuantity = Random.Range(1, 3);                            // Drink: 1-2
 
     // 3. Save IDs for Stock System
@@ -112,8 +139,20 @@ public class OrderBubbleController : MonoBehaviour
 
   public void ShowPayment(float amount)
   {
-    string paymentText = $"Here's ${amount:F2}";
+    // If deck is empty, refill and shuffle all 5 indices
+    if (paymentDeck.Count == 0)
+    {
+      RebuildAndShuffle(paymentDeck, paymentPhrases.Length);
+    }
 
+    // Draw the first card (index) from the shuffled deck
+    int phraseIndex = paymentDeck[0];
+    paymentDeck.RemoveAt(0);
+
+    // Build the payment text: phrase + formatted dollar amount
+    string paymentText = paymentPhrases[phraseIndex] + amount.ToString("F2") + ".";
+
+    // Display with typewriter effect
     if (typingCoroutine != null) StopCoroutine(typingCoroutine);
     typingCoroutine = StartCoroutine(TypewriterEffect(paymentText));
   }
@@ -247,7 +286,7 @@ public class OrderBubbleController : MonoBehaviour
     foreach (char letter in sentence)
     {
       typingBuilder.Append(letter);
-      textDisplay.SetText(typingBuilder);
+      textDisplay.text = typingBuilder.ToString();
       yield return typingWait;
     }
   }

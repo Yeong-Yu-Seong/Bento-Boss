@@ -21,6 +21,7 @@ public class PaymentHandler : MonoBehaviour
     private float requiredChange;
     private bool waitingForPayment = false;
     private bool waitingForChange = false;
+    private GameObject spawnedPaymentObject;
 
     public static PaymentHandler Instance;
 
@@ -56,14 +57,14 @@ public class PaymentHandler : MonoBehaviour
         currentOrderTotal = ItemPrices.Instance.CalculateOrderTotal(foodID, foodQty, drinkID, drinkQty);
         customerPayment = DetermineCustomerPayment(currentOrderTotal);
         requiredChange = customerPayment - currentOrderTotal;
-        
+
         Debug.Log($"Order Total: ${currentOrderTotal:F2}, Customer Pays: ${customerPayment:F2}, Change Needed: ${requiredChange:F2}");
-        
+
         if (TrayValidator.Instance != null)
         {
             TrayValidator.Instance.StartPaymentPhase(requiredChange);
         }
-        
+
         StartCoroutine(ShowPaymentSequence());
     }
 
@@ -109,7 +110,8 @@ public class PaymentHandler : MonoBehaviour
         GameObject moneyToSpawn = GetMoneyPrefab(customerPayment);
         if (moneyToSpawn != null)
         {
-            Instantiate(moneyToSpawn, moneySpawnPoint.position, moneySpawnPoint.rotation);
+            spawnedPaymentObject = Instantiate(moneyToSpawn, moneySpawnPoint.position, moneySpawnPoint.rotation);
+            spawnedPaymentObject.layer = LayerMask.NameToLayer("CustomerPayment");
             Debug.Log($"Spawned ${customerPayment:F2} at counter");
         }
     }

@@ -8,6 +8,7 @@ public class OrderProgressUI : MonoBehaviour
   [SerializeField] private GameObject progressPanel;
   [SerializeField] private TextMeshProUGUI foodProgressText;
   [SerializeField] private TextMeshProUGUI drinkProgressText;
+  [SerializeField] private TextMeshProUGUI changeGivenText;
 
   [Header("Dependencies")]
   [SerializeField] private Camera mainCamera;
@@ -57,6 +58,10 @@ public class OrderProgressUI : MonoBehaviour
     {
       UpdateProgressDisplay();
     }
+    else
+    {
+      UpdateChangeDisplay();
+    }
   }
 
   public void ShowOrderProgress()
@@ -87,6 +92,11 @@ public class OrderProgressUI : MonoBehaviour
     orderActive = true;
     paymentMode = false;
 
+    if (changeGivenText != null)
+    {
+      changeGivenText.gameObject.SetActive(false);
+    }
+
     UpdateProgressDisplay();
   }
 
@@ -107,6 +117,13 @@ public class OrderProgressUI : MonoBehaviour
       drinkProgressText.text = $"Payment Received: ${paymentReceived:F2}";
       drinkProgressText.color = Color.white;
     }
+
+    if (changeGivenText != null)
+    {
+      changeGivenText.gameObject.SetActive(true);
+      changeGivenText.text = "Change Given: $0.00";
+      changeGivenText.color = incompleteColor;
+    }
   }
 
   public void HideUI()
@@ -114,6 +131,11 @@ public class OrderProgressUI : MonoBehaviour
     if (progressPanel != null) progressPanel.SetActive(false);
     orderActive = false;
     paymentMode = false;
+
+    if (changeGivenText != null)
+    {
+      changeGivenText.gameObject.SetActive(false);
+    }
   }
 
   private void UpdateProgressDisplay()
@@ -141,6 +163,23 @@ public class OrderProgressUI : MonoBehaviour
       drinkProgressText.text = $"{drinkCount}/{requiredDrinkQuantity} {cachedDrinkDisplayName}";
       drinkProgressText.color = drinkCount > requiredDrinkQuantity ? excessColor :
                                 drinkCount >= requiredDrinkQuantity ? completeColor : incompleteColor;
+    }
+  }
+
+  private void UpdateChangeDisplay()
+  {
+    if (changeGivenText != null && TrayValidator.Instance != null)
+    {
+      float currentChange = TrayValidator.Instance.GetCollectedChange();
+      float required = PaymentHandler.Instance != null ? PaymentHandler.Instance.GetRequiredChange() : 0f;
+      changeGivenText.text = $"Change Given: ${currentChange:F2}";
+
+      if (Mathf.Abs(currentChange - required) < 0.01f)
+        changeGivenText.color = completeColor;
+      else if (currentChange > required)
+        changeGivenText.color = excessColor;
+      else
+        changeGivenText.color = incompleteColor;
     }
   }
 }
