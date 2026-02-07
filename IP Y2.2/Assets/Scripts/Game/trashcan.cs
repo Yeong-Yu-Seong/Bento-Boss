@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class TrashCan : MonoBehaviour
 {
-    public SocketStockManager stockManager;  // Drag your SocketStockManager object here
+    public InventoryStockDisplay stockManager;
     
     void OnTriggerEnter(Collider other)
     {
