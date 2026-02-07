@@ -153212,10 +153212,6 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 984945140364613510, guid: 9b80364fd78e75f4fb23896e123e9166, type: 3}
-      propertyPath: spawnLocation
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 984945140364613510, guid: 9b80364fd78e75f4fb23896e123e9166, type: 3}
       propertyPath: 'mySockets.Array.data[0]'
       value: 
       objectReference: {fileID: 1398387591}
@@ -153461,11 +153457,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3486537638356899509, guid: 9b80364fd78e75f4fb23896e123e9166, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 3
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 3486537638356899509, guid: 9b80364fd78e75f4fb23896e123e9166, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 2
+      value: 2.6
       objectReference: {fileID: 0}
     - target: {fileID: 3486537638356899509, guid: 9b80364fd78e75f4fb23896e123e9166, type: 3}
       propertyPath: m_LocalPosition.x
@@ -153501,7 +153497,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3486537638356899509, guid: 9b80364fd78e75f4fb23896e123e9166, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 3.2
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 3486537638356899509, guid: 9b80364fd78e75f4fb23896e123e9166, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x

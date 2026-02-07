@@ -1,52 +1,48 @@
 using UnityEngine;
 using TMPro;
-using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using System.Collections.Generic;
 
-public class SocketStockManager : MonoBehaviour
+public class InventoryStockDisplay : MonoBehaviour
 {
     [Header("--- Stock Counting ---")]
-    public List<XRSocketInteractor> mySockets; 
-    public TextMeshProUGUI stockText;
+    public List<XRSocketInteractor> mySockets;
+    public TextMeshProUGUI stockTextLeft;
+    public TextMeshProUGUI stockTextRight;
     
-    [Header("--- Spawning Logic ---")]
-    public Button uiButton;
-    public GameObject cratePrefab;
-    public Transform spawnLocation;
-    public float cooldownTime = 3f;            
-    private bool isCoolingDown = false;
+    // Left column order: Apple, Banana, Orange, Strawberry
+    private string[] leftColumnFoods = { "Apple", "Banana", "Orange", "Strawberry" };
+    
+    // Right column order: Bento1, Bento2, Blueberry, GreenTea
+    private string[] rightColumnFoods = { "Bento1", "Bento2", "Blueberry", "GreenTea" };
+    
+    // Display name mapping for Bento items
+    private Dictionary<string, string> displayNames = new Dictionary<string, string>
+    {
+        { "Bento1", "BentoSet 1" },
+        { "Bento2", "BentoSet 2" }
+    };
     
     [Header("--- Trash Disposal ---")]
     public TextMeshProUGUI trashCountText;
     private int trashDisposed = 0;
-
-    // Cache the count to avoid unnecessary UI updates
-    private int lastCount = -1;
-
+    
     void Start()
     {
-        if (uiButton != null)
-        {
-            uiButton.onClick.AddListener(TrySpawnCrate);
-        }
-        
         foreach (var socket in mySockets)
         {
             if (socket != null)
             {
-                // Subscribe to events
                 socket.selectEntered.AddListener(OnSocketChanged);
                 socket.selectExited.AddListener(OnSocketChanged);
             }
         }
         
-        UpdateStockDisplay(true); // Initial forced update
+        UpdateStockDisplay();
         UpdateTrashDisplay();
     }
     
-    // Use OnDisable in addition to OnDestroy for better VR cleanup
     void OnDisable()
     {
         foreach (var socket in mySockets)
@@ -59,37 +55,70 @@ public class SocketStockManager : MonoBehaviour
         }
     }
     
-    // --- FIX 2: Event-driven updates ---
     void OnSocketChanged(BaseInteractionEventArgs args)
     {
         UpdateStockDisplay();
     }
     
-    void UpdateStockDisplay(bool forceUpdate = false)
+    Dictionary<string, int> CountFoodByType()
     {
-        int currentCount = 0;
+        var counts = new Dictionary<string, int>();
+        
+        foreach (var food in leftColumnFoods)
+        {
+            counts[food] = 0;
+        }
+        foreach (var food in rightColumnFoods)
+        {
+            counts[food] = 0;
+        }
+        
         foreach (var socket in mySockets)
         {
-            if (socket == null) continue;
+            if (socket == null || !socket.hasSelection) continue;
             
-            // Check if socket has an object
-            if (socket.hasSelection || socket.interactablesSelected.Count > 0)
+            var selected = socket.interactablesSelected;
+            if (selected.Count == 0) continue;
+            
+            GameObject obj = (selected[0] as MonoBehaviour)?.gameObject;
+            if (obj == null) continue;
+            
+            string tag = obj.tag;
+            if (counts.ContainsKey(tag))
             {
-                currentCount++;
+                counts[tag]++;
             }
         }
-
-        // Only update UI and allocate strings if the number actually changed
-        if (forceUpdate || currentCount != lastCount)
+        
+        return counts;
+    }
+    
+    void UpdateStockDisplay()
+    {
+        var counts = CountFoodByType();
+        
+        UpdateColumnText(stockTextLeft, leftColumnFoods, counts);
+        UpdateColumnText(stockTextRight, rightColumnFoods, counts);
+    }
+    
+    void UpdateColumnText(TextMeshProUGUI textComponent, string[] foodList, Dictionary<string, int> counts)
+    {
+        if (textComponent == null) return;
+        
+        var lines = new List<string>();
+        
+        foreach (var food in foodList)
         {
-            lastCount = currentCount;
-            if (stockText != null)
-            {
-                // Using string interpolation is slightly cleaner, but the key is only doing it once!
-                stockText.text = $"Stock: {currentCount}";
-                stockText.color = (currentCount == 0) ? Color.red : Color.black;
-            }
+            int count = counts[food];
+            string displayName = displayNames.ContainsKey(food) ? displayNames[food] : food;
+            
+            string colorTag = count == 0 ? "<color=red>" : "";
+            string closeTag = count == 0 ? "</color>" : "";
+            
+            lines.Add($"{colorTag}{displayName}: {count}{closeTag}");
         }
+        
+        textComponent.text = string.Join("\n", lines);
     }
     
     void UpdateTrashDisplay()
@@ -102,30 +131,10 @@ public class SocketStockManager : MonoBehaviour
     
     public void DisposeTrash(GameObject trashedObject)
     {
-        if (trashedObject == null) return; // Safety check
+        if (trashedObject == null) return;
+        
         trashDisposed++;
         UpdateTrashDisplay();
         Destroy(trashedObject);
-    }
-    
-    public void TrySpawnCrate()
-    {
-        if (isCoolingDown) return;
-        
-        if (cratePrefab != null && spawnLocation != null)
-        {
-            Instantiate(cratePrefab, spawnLocation.position, spawnLocation.rotation);
-        }
-        
-        isCoolingDown = true;
-        if(uiButton != null) uiButton.interactable = false;
-        
-        Invoke("ResetCooldown", cooldownTime);
-    }
-    
-    void ResetCooldown()
-    {
-        isCoolingDown = false;
-        if(uiButton != null) uiButton.interactable = true;
     }
 }
