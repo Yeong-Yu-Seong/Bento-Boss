@@ -64,6 +64,9 @@ public class OrderBubbleController : MonoBehaviour
   // The boundary ID: anything below this is a Fruit, anything at or above is a Bento
   private const int BENTO_START_ID = 4;
 
+  // Tracks whether the first post-milestone bento order has been forced
+  private bool _bentoIntroduced = false;
+
   private void Start()
   {
     // Fallback: If you forgot to drag it in, try to find it automatically
@@ -85,7 +88,7 @@ public class OrderBubbleController : MonoBehaviour
     typingWait = new WaitForSeconds(typingSpeed);
 
     // --- Initialize and shuffle both decks on Start ---
-    RebuildAndShuffle(foodDeck, foodNames.Length);   // 6 cards: [0,1,2,3,4,5]
+    RebuildFoodDeck();                               // 4 or 6 cards depending on earnings
     RebuildAndShuffle(drinkDeck, drinkNames.Length); // 2 cards: [0,1]
     RebuildAndShuffle(paymentDeck, paymentPhrases.Length); // 5 cards: [0,1,2,3,4]
   }
@@ -159,6 +162,31 @@ public class OrderBubbleController : MonoBehaviour
 
   // --- SHUFFLED BAG METHODS ---
 
+  // Fills the food deck, excluding bento IDs when earnings < $15
+  // When bentos are unlocked, each bento ID gets 2 copies for 50/50 weighting
+  // Locked:   [0,1,2,3]             = 4 cards (fruits only)
+  // Unlocked: [0,1,2,3, 4,4, 5,5]  = 8 cards (50% bento, 50% fruit)
+  private void RebuildFoodDeck()
+  {
+    foodDeck.Clear();
+    bool bentoUnlocked = EarningsTracker.Instance != null && EarningsTracker.Instance.CurrentProfit >= 15f;
+
+    // Always add fruits (1 copy each)
+    for (int i = 0; i < BENTO_START_ID; i++) foodDeck.Add(i);
+
+    if (bentoUnlocked)
+    {
+      // Add bento IDs twice each for higher weighting
+      for (int i = BENTO_START_ID; i < foodNames.Length; i++)
+      {
+        foodDeck.Add(i);
+        foodDeck.Add(i);
+      }
+    }
+
+    FisherYatesShuffle(foodDeck);
+  }
+
   // Fills a deck with one copy of each ID (0 to count-1), then shuffles it
   private void RebuildAndShuffle(List<int> deck, int itemCount)
   {
@@ -191,9 +219,24 @@ public class OrderBubbleController : MonoBehaviour
   // --- FOOD DRAW: Two-layer guardrail ---
   private int DrawFood()
   {
+    // Guaranteed bento on the first order after milestone unlock
+    bool bentoUnlocked = EarningsTracker.Instance != null && EarningsTracker.Instance.CurrentProfit >= 15f;
+    if (bentoUnlocked && !_bentoIntroduced)
+    {
+      _bentoIntroduced = true;
+      int introID = Random.Range(BENTO_START_ID, foodNames.Length); // 4 or 5
+      lastFoodID2 = lastFoodID1;
+      lastFoodID1 = introID;
+      lastFoodCat2 = lastFoodCat1;
+      lastFoodCat1 = GetFoodCategory(introID);
+      // Rebuild deck now that bentos are unlocked (weighted)
+      RebuildFoodDeck();
+      return introID;
+    }
+
     if (foodDeck.Count == 0)
     {
-      RebuildAndShuffle(foodDeck, foodNames.Length);
+      RebuildFoodDeck();
     }
 
     int attempts = 0;
@@ -203,7 +246,7 @@ public class OrderBubbleController : MonoBehaviour
     {
       if (foodDeck.Count == 0)
       {
-        RebuildAndShuffle(foodDeck, foodNames.Length);
+        RebuildFoodDeck();
       }
 
       int candidate = foodDeck[0];
@@ -231,7 +274,7 @@ public class OrderBubbleController : MonoBehaviour
     Debug.LogWarning("DrawFood: safety cap hit. Forcing next card.");
     if (foodDeck.Count == 0)
     {
-      RebuildAndShuffle(foodDeck, foodNames.Length);
+      RebuildFoodDeck();
     }
     int forced = foodDeck[0];
     foodDeck.RemoveAt(0);
