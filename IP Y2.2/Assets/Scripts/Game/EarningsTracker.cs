@@ -78,6 +78,8 @@ public class EarningsTracker : MonoBehaviour
     _currentProfit += amount;
     UpdateUI();
 
+    if (SessionLogger.Instance != null) SessionLogger.Instance.PushBalanceNow(_currentProfit);
+
     if (_currentProfit >= dailyGoal)
     {
       OnGoalReached();
@@ -104,6 +106,9 @@ public class EarningsTracker : MonoBehaviour
 
   private void OnGoalReached()
   {
-    // Logic for when goal is hit
+    if (SessionLogger.Instance != null)
+    {
+      SessionLogger.Instance.EndSession();
+    }
   }
 }

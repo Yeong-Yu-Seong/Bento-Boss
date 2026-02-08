@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using Firebase.Database;
@@ -121,6 +122,99 @@ namespace BentoBoss.FirebaseManagers
       {
         Debug.LogError($"[Database] Fetch failed: {ex.Message}");
         return new FirebaseResult<UserData>(false, null, ex.Message);
+      }
+    }
+
+    /// <summary>
+    /// Save a complete game session with summary, inventory, and transaction history
+    /// Path: sessions/{userId}/{sessionId}
+    /// </summary>
+    public async Task<FirebaseResult<bool>> SaveSessionData(string userId, string sessionId, FirebaseSessionData sessionData)
+    {
+      if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(sessionId) || sessionData == null)
+        return new FirebaseResult<bool>(false, false, "Invalid session data");
+
+      try
+      {
+        await _database.Child("sessions").Child(userId).Child(sessionId)
+            .SetValueAsync(sessionData.ToDictionary());
+
+        Debug.Log($"[Database] Session saved for user {userId}, key: {sessionId}");
+        return new FirebaseResult<bool>(true, true);
+      }
+      catch (Exception ex)
+      {
+        Debug.LogError($"[Database] Session save failed: {ex.Message}");
+        return new FirebaseResult<bool>(false, false, ex.Message);
+      }
+    }
+
+    /// <summary>
+    /// Push only the changed inventory field using UpdateChildrenAsync.
+    /// Avoids overwriting all 8 fields when only 1 item changed.
+    /// </summary>
+    public async void PushInventoryFieldLive(string userId, string sessionId, string entryKey, int newValue)
+    {
+      try
+      {
+        var update = new Dictionary<string, object> { { entryKey, newValue } };
+        await _database.Child("sessions").Child(userId).Child(sessionId)
+            .Child("inventory_logs").UpdateChildrenAsync(update);
+      }
+      catch (Exception ex)
+      {
+        Debug.LogWarning($"[Database] Live inventory field push failed: {ex.Message}");
+      }
+    }
+
+    /// <summary>
+    /// Push a single transaction entry in real-time
+    /// Path: sessions/{userId}/{sessionId}/transaction_history/{orderId}
+    /// </summary>
+    public async void PushTransactionLive(string userId, string sessionId, string orderId, Dictionary<string, object> data)
+    {
+      try
+      {
+        await _database.Child("sessions").Child(userId).Child(sessionId)
+            .Child("transaction_history").Child(orderId).SetValueAsync(data);
+      }
+      catch (Exception ex)
+      {
+        Debug.LogWarning($"[Database] Live transaction push failed: {ex.Message}");
+      }
+    }
+
+    /// <summary>
+    /// Partially update session_summary fields without overwriting siblings
+    /// Path: sessions/{userId}/{sessionId}/session_summary
+    /// </summary>
+    public async void PushSummaryFieldsLive(string userId, string sessionId, Dictionary<string, object> fields)
+    {
+      try
+      {
+        await _database.Child("sessions").Child(userId).Child(sessionId)
+            .Child("session_summary").UpdateChildrenAsync(fields);
+      }
+      catch (Exception ex)
+      {
+        Debug.LogWarning($"[Database] Live summary push failed: {ex.Message}");
+      }
+    }
+
+    /// <summary>
+    /// Push elapsed timer value in real-time
+    /// Path: sessions/{userId}/{sessionId}/session_summary/total_time_seconds
+    /// </summary>
+    public async void PushTimerLive(string userId, string sessionId, float elapsed)
+    {
+      try
+      {
+        await _database.Child("sessions").Child(userId).Child(sessionId)
+            .Child("session_summary").Child("total_time_seconds").SetValueAsync(elapsed);
+      }
+      catch (Exception ex)
+      {
+        Debug.LogWarning($"[Database] Live timer push failed: {ex.Message}");
       }
     }
   }

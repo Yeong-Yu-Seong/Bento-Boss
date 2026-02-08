@@ -15252,7 +15252,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3434068608488975591, guid: 51513ef6271594a449e8ba9632edd9e9, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -26
+      value: -25
       objectReference: {fileID: 0}
     - target: {fileID: 3434068608488975591, guid: 51513ef6271594a449e8ba9632edd9e9, type: 3}
       propertyPath: m_LocalRotation.w
@@ -40556,6 +40556,51 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 9095833968678967679, guid: 721b1400b464341488aef39365f97747, type: 3}
   m_PrefabInstance: {fileID: 624196372}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &624998899
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 624998901}
+  - component: {fileID: 624998900}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &624998900
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 624998899}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07e430bb2876aad438162133135fcaf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SessionLogger
+  inventoryDisplay: {fileID: 8831311031897912767}
+--- !u!4 &624998901
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 624998899}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 14.378, y: 2.47442, z: 2.17045}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &626342723
 GameObject:
   m_ObjectHideFlags: 0
@@ -64363,7 +64408,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1028895993
 Transform:
   m_ObjectHideFlags: 0
@@ -85042,7 +85087,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4027914906706431016, guid: f4b35d0d9528d994babbb04e53af8ff3, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -26
+      value: -25
       objectReference: {fileID: 0}
     - target: {fileID: 4027914906706431016, guid: f4b35d0d9528d994babbb04e53af8ff3, type: 3}
       propertyPath: m_LocalRotation.w
@@ -91042,7 +91087,7 @@ MonoBehaviour:
   progressSlider: {fileID: 1037731374}
   sliderFillImage: {fileID: 971492432}
   mainCamera: {fileID: 415435430}
-  startingProfit: 14
+  startingProfit: 0
   dailyGoal: 50
   defaultColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   goalReachedColor: {r: 0, g: 1, b: 0, a: 1}
@@ -135256,7 +135301,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4739360650704371096, guid: 7b3ee7940ebf47d4ebc545c7db4cca8a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -13
+      value: -20
       objectReference: {fileID: 0}
     - target: {fileID: 4739360650704371096, guid: 7b3ee7940ebf47d4ebc545c7db4cca8a, type: 3}
       propertyPath: m_LocalRotation.w
@@ -136376,3 +136421,4 @@ SceneRoots:
   - {fileID: 4411985979751621501}
   - {fileID: 5542150216475827625}
   - {fileID: 646432076}
+  - {fileID: 624998901}
