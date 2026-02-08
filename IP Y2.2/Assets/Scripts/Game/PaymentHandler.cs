@@ -140,6 +140,7 @@ public class PaymentHandler : MonoBehaviour
             if (orderProgressUI != null)
             {
                 orderProgressUI.ShowPaymentMessage("Give change", currentOrderTotal, customerPayment);
+                orderProgressUI.OnPaymentCollected();
             }
 
             if (trayValidator != null)
@@ -160,6 +161,7 @@ public class PaymentHandler : MonoBehaviour
             if (orderProgressUI != null)
             {
                 orderProgressUI.ShowPaymentMessage("Correct change!", currentOrderTotal, customerPayment);
+                orderProgressUI.OnPaymentCollected();
             }
 
             if (EarningsTracker.Instance != null)
@@ -205,6 +207,8 @@ public class PaymentHandler : MonoBehaviour
         {
             orderProgressUI.HideUI();
         }
+
+        yield return new WaitForSeconds(1f);
 
         if (QueueManager.Instance != null)
         {

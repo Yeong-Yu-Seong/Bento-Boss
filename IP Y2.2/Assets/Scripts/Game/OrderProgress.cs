@@ -18,7 +18,7 @@ public class OrderProgressUI : MonoBehaviour
   [Header("Color Settings")]
   [SerializeField] private Color incompleteColor = new Color(1f, 0.71f, 0.39f);
   [SerializeField] private Color completeColor = new Color(0.39f, 1f, 0.39f);
-  [SerializeField] private Color excessColor = new Color(1f, 0.39f, 0.39f);
+  [SerializeField] private Color redColor = new Color(1f, 0.39f, 0.39f);
 
   private readonly string[] foodTags = { "Apple", "Banana", "Orange", "Strawberry", "Bento1", "Bento2" };
   private readonly string[] drinkTags = { "Blueberry", "GreenTea" };
@@ -114,8 +114,8 @@ public class OrderProgressUI : MonoBehaviour
 
     if (drinkProgressText != null)
     {
-      drinkProgressText.text = $"Payment Received: ${paymentReceived:F2}";
-      drinkProgressText.color = Color.white;
+      drinkProgressText.text = $"Payment Collected: ${paymentReceived:F2}";
+      drinkProgressText.color = redColor;
     }
 
     if (changeGivenText != null)
@@ -123,6 +123,14 @@ public class OrderProgressUI : MonoBehaviour
       changeGivenText.gameObject.SetActive(true);
       changeGivenText.text = "Change Given: $0.00";
       changeGivenText.color = incompleteColor;
+    }
+  }
+
+  public void OnPaymentCollected()
+  {
+    if (drinkProgressText != null)
+    {
+      drinkProgressText.color = completeColor;
     }
   }
 
@@ -154,14 +162,14 @@ public class OrderProgressUI : MonoBehaviour
     if (foodProgressText != null)
     {
       foodProgressText.text = $"{foodCount}/{requiredFoodQuantity} {cachedFoodDisplayName}";
-      foodProgressText.color = foodCount > requiredFoodQuantity ? excessColor :
+      foodProgressText.color = foodCount > requiredFoodQuantity ? redColor :
                                foodCount >= requiredFoodQuantity ? completeColor : incompleteColor;
     }
 
     if (drinkProgressText != null)
     {
       drinkProgressText.text = $"{drinkCount}/{requiredDrinkQuantity} {cachedDrinkDisplayName}";
-      drinkProgressText.color = drinkCount > requiredDrinkQuantity ? excessColor :
+      drinkProgressText.color = drinkCount > requiredDrinkQuantity ? redColor :
                                 drinkCount >= requiredDrinkQuantity ? completeColor : incompleteColor;
     }
   }
@@ -177,7 +185,7 @@ public class OrderProgressUI : MonoBehaviour
       if (Mathf.Abs(currentChange - required) < 0.01f)
         changeGivenText.color = completeColor;
       else if (currentChange > required)
-        changeGivenText.color = excessColor;
+        changeGivenText.color = redColor;
       else
         changeGivenText.color = incompleteColor;
     }

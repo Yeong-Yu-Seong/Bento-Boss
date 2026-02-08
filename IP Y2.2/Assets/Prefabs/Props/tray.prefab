@@ -422,6 +422,7 @@ GameObject:
   - component: {fileID: 5006702217450145819}
   - component: {fileID: 27712623943225890}
   - component: {fileID: 1117485644573904062}
+  - component: {fileID: 3261775786044081563}
   m_Layer: 0
   m_Name: tray
   m_TagString: Untagged
@@ -559,7 +560,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.011, y: 0.002, z: 0.007}
+  m_Size: {x: 0.0105, y: 0.002, z: 0.0065}
   m_Center: {x: 0.000000007450581, y: 0.00045, z: 9.313226e-10}
 --- !u!114 &1117485644573904062
 MonoBehaviour:
@@ -593,6 +594,19 @@ MonoBehaviour:
   strawberrySocket3: {fileID: 4157177906201303126}
   snapDelay: 0.5
   snapSpeed: 5
+--- !u!114 &3261775786044081563
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1653598443062222038}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f9f0a69c78a6543bfb49df58a7ad2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TrayCollisionHandler
+  trayValidator: {fileID: 1117485644573904062}
 --- !u!1 &1710271968334875261
 GameObject:
   m_ObjectHideFlags: 0

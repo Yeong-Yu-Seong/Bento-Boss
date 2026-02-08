@@ -292,11 +292,10 @@ public class TrayValidator : MonoBehaviour
               collectedMoneySet.Remove(itemObj);
               collectedChange -= moneyValue;
 
-              Rigidbody moneyRb = GetCachedRigidbody(itemObj); // Renamed for safety
+              Rigidbody moneyRb = GetCachedRigidbody(itemObj);
               if (moneyRb != null)
               {
-                  moneyRb.isKinematic = false;
-                  moneyRb.useGravity = true;
+                  StartCoroutine(ResetMoneyPhysics(moneyRb));
               }
 
               Debug.Log($"Money removed: ${moneyValue:F2}, Remaining: ${collectedChange:F2}");
@@ -445,6 +444,16 @@ public class TrayValidator : MonoBehaviour
       }
 
       return null;
+  }
+
+  private IEnumerator ResetMoneyPhysics(Rigidbody rb)
+  {
+    yield return new WaitForFixedUpdate();
+    if (rb != null)
+    {
+      rb.isKinematic = false;
+      rb.useGravity = true;
+    }
   }
 
   private IEnumerator SnapToSocketAfterDelay(GameObject item, Transform socket)

@@ -20,7 +20,7 @@ public class EarningsTracker : MonoBehaviour
     [SerializeField] private Camera mainCamera;
 
     [Header("Settings")]
-    [SerializeField] private float startingProfit = 10f;
+    [SerializeField] private float startingProfit = 0f;
     [SerializeField] private float dailyGoal = 50f;
     [SerializeField] private Color defaultColor = Color.yellow;
     [SerializeField] private Color goalReachedColor = Color.green;
