@@ -19,8 +19,8 @@ public class PaymentHandler : MonoBehaviour
   private float currentOrderTotal;
   private float customerPayment;
   private float requiredChange;
-  private bool waitingForPayment = false;
-  private bool waitingForChange = false;
+  private bool paymentReceived = false;
+  private bool changeGiven = false;
   private GameObject spawnedPaymentObject;
 
   public static PaymentHandler Instance;
@@ -58,6 +58,9 @@ public class PaymentHandler : MonoBehaviour
     customerPayment = DetermineCustomerPayment(currentOrderTotal);
     requiredChange = customerPayment - currentOrderTotal;
 
+    paymentReceived = false;
+    changeGiven = false;
+
     Debug.Log($"Order Total: ${currentOrderTotal:F2}, Customer Pays: ${customerPayment:F2}, Change Needed: ${requiredChange:F2}");
 
     if (TrayValidator.Instance != null)
@@ -83,8 +86,6 @@ public class PaymentHandler : MonoBehaviour
     }
 
     SpawnCustomerPayment();
-
-    waitingForPayment = true;
   }
 
   private float DetermineCustomerPayment(float orderTotal)
@@ -123,19 +124,17 @@ public class PaymentHandler : MonoBehaviour
     if (amount == 10f) return moneyPrefabs[0];
     if (amount == 5f) return moneyPrefabs[1];
 
-
     return moneyPrefabs[0];
   }
 
   public void OnPaymentReceived(float amount)
   {
-    if (!waitingForPayment) return;
+    if (paymentReceived) return;
 
     if (Mathf.Abs(amount - customerPayment) < 0.01f)
     {
       Debug.Log("Payment received correctly!");
-      waitingForPayment = false;
-      waitingForChange = true;
+      paymentReceived = true;
 
       if (orderProgressUI != null)
       {
@@ -143,33 +142,25 @@ public class PaymentHandler : MonoBehaviour
         orderProgressUI.OnPaymentCollected();
       }
 
-      if (trayValidator != null)
-      {
-        trayValidator.StartPaymentPhase(requiredChange);
-      }
+      CheckBothTasksComplete();
     }
   }
 
   public void OnChangeValidated(bool correct, float givenAmount)
   {
-    if (!waitingForChange) return;
-
     if (correct)
     {
+      if (changeGiven) return;
+
       Debug.Log("✓ Correct change given!");
+      changeGiven = true;
 
       if (orderProgressUI != null)
       {
         orderProgressUI.ShowPaymentMessage("Correct change!", currentOrderTotal, customerPayment);
-        orderProgressUI.OnPaymentCollected();
       }
 
-      if (EarningsTracker.Instance != null)
-      {
-        EarningsTracker.Instance.AddProfit(currentOrderTotal);
-      }
-
-      StartCoroutine(CompleteTransaction());
+      CheckBothTasksComplete();
     }
     else
     {
@@ -192,6 +183,19 @@ public class PaymentHandler : MonoBehaviour
     }
   }
 
+  private void CheckBothTasksComplete()
+  {
+    if (paymentReceived && changeGiven)
+    {
+      if (EarningsTracker.Instance != null)
+      {
+        EarningsTracker.Instance.AddProfit(currentOrderTotal);
+      }
+
+      StartCoroutine(CompleteTransaction());
+    }
+  }
+
   private static readonly string[] foodTagNames = { "Apple", "Banana", "Orange", "Strawberry", "Bento1", "Bento2" };
   private static readonly string[] drinkTagNames = { "Blueberry", "GreenTea" };
 
@@ -199,9 +203,6 @@ public class PaymentHandler : MonoBehaviour
   {
     yield return new WaitForSeconds(2f);
 
-    waitingForChange = false;
-
-    // Log transaction before clearing order
     if (SessionLogger.Instance != null && orderBubbleController != null)
     {
       int foodID = orderBubbleController.requiredFoodID;

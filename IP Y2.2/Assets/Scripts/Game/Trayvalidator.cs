@@ -12,15 +12,6 @@ public class TrayValidator : MonoBehaviour
   [Header("Order Complete Settings")]
   [Tooltip("Delay before moving to next customer after order complete (seconds)")]
 
-  [Header("VFX Settings")]
-  public ParticleSystem correctItemVFX;
-  public ParticleSystem incorrectItemVFX;
-  public float vfxDuration = 2f;
-
-  [Header("Sound Effects")]
-  public AudioSource correctItemSFX;
-  public AudioSource incorrectItemSFX;
-
   [Header("Socket References")]
   [Header("Drink Sockets")]
   public Transform drinkSocket1;
@@ -110,6 +101,14 @@ public class TrayValidator : MonoBehaviour
   public bool IsMoneyCollected(GameObject obj)
   {
     return paymentPhase && collectedMoneySet.Contains(obj);
+  }
+
+  public void ClearCollectedChange()
+  {
+    collectedMoney.Clear();
+    collectedMoneySet.Clear();
+    collectedChange = 0f;
+    paymentPhase = false;
   }
 
   private Rigidbody GetCachedRigidbody(GameObject obj)
@@ -248,37 +247,33 @@ public class TrayValidator : MonoBehaviour
 
       if (IsCorrectItemForOrder(tag))
       {
-          Transform targetSocket = GetSocketForItem(tag, itemObj);
-          StartCoroutine(CorrectItemFeedback()); // Play correct item feedback
-          if (targetSocket != null)
+        Transform targetSocket = GetSocketForItem(tag, itemObj);
+        if (targetSocket != null)
+        {
+          // Only assign if this item doesn't already have a socket assignment
+          if (!itemToSocket.ContainsKey(itemObj))
           {
-              // Only assign if this item doesn't already have a socket assignment
-              if (!itemToSocket.ContainsKey(itemObj))
+            socketOccupancy[targetSocket] = itemObj;
+            itemToSocket[itemObj] = targetSocket;
+
+            Rigidbody rb = GetCachedRigidbody(itemObj);
+            if (rb != null)
+            {
+              rb.useGravity = false;
+
+              if (!rb.isKinematic)
               {
-                  socketOccupancy[targetSocket] = itemObj;
-                  itemToSocket[itemObj] = targetSocket;
-
-                  Rigidbody rb = GetCachedRigidbody(itemObj);
-                  if (rb != null)
-                  {
-                      rb.useGravity = false;
-
-                      if (!rb.isKinematic)
-                      {
-                          rb.linearVelocity = Vector3.zero;
-                          rb.angularVelocity = Vector3.zero;
-                      }
-
-                      rb.isKinematic = true;
-                  }
-
-                  Coroutine snapCoroutine = StartCoroutine(SnapToSocketAfterDelay(itemObj, targetSocket));
-                  pendingSnaps[itemObj] = snapCoroutine;
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
               }
+
+              rb.isKinematic = true;
+            }
+
+            Coroutine snapCoroutine = StartCoroutine(SnapToSocketAfterDelay(itemObj, targetSocket));
+            pendingSnaps[itemObj] = snapCoroutine;
           }
-      } else
-      {
-          StartCoroutine(IncorrectItemFeedback()); // Play incorrect item feedback
+        }
       }
 
       ValidateOrder();
@@ -287,85 +282,85 @@ public class TrayValidator : MonoBehaviour
 
   private void OnTriggerExit(Collider other)
   {
-      if (!orderActive && !paymentPhase) return;
-      if (other == null) return;
-      GameObject itemObj = other.attachedRigidbody ? other.attachedRigidbody.gameObject : other.gameObject;
+    if (!orderActive && !paymentPhase) return;
+    if (other == null) return;
+    GameObject itemObj = other.attachedRigidbody ? other.attachedRigidbody.gameObject : other.gameObject;
 
-      if (itemObj == null) return;
-      if (other.gameObject != itemObj) return;
-      string tag = itemObj.tag;
+    if (itemObj == null) return;
+    if (other.gameObject != itemObj) return;
+    string tag = itemObj.tag;
 
-      // Handle money removal during payment phase
-      if (paymentPhase && collectedMoneySet.Contains(itemObj))
+    // Handle money removal during payment phase
+    if (paymentPhase && collectedMoneySet.Contains(itemObj))
+    {
+      float moneyValue = GetMoneyValue(tag);
+      if (moneyValue > 0f)
       {
-          float moneyValue = GetMoneyValue(tag);
-          if (moneyValue > 0f)
-          {
-              collectedMoney.Remove(itemObj);
-              collectedMoneySet.Remove(itemObj);
-              collectedChange -= moneyValue;
+        collectedMoney.Remove(itemObj);
+        collectedMoneySet.Remove(itemObj);
+        collectedChange -= moneyValue;
 
-              Rigidbody moneyRb = GetCachedRigidbody(itemObj);
-              if (moneyRb != null)
-              {
-                  StartCoroutine(ResetMoneyPhysics(moneyRb));
-              }
+        Rigidbody moneyRb = GetCachedRigidbody(itemObj);
+        if (moneyRb != null)
+        {
+          StartCoroutine(ResetMoneyPhysics(moneyRb));
+        }
 
-              Debug.Log($"Money removed: ${moneyValue:F2}, Remaining: ${collectedChange:F2}");
-          }
+        Debug.Log($"Money removed: ${moneyValue:F2}, Remaining: ${collectedChange:F2}");
+      }
+      return;
+    }
+
+    if (physicalItemsSet.Contains(itemObj))
+    {
+      if (itemToSocket.TryGetValue(itemObj, out Transform assignedSocket))
+      {
+        Rigidbody checkRb = GetCachedRigidbody(itemObj);
+        if (checkRb != null && checkRb.isKinematic && Vector3.Distance(itemObj.transform.position, assignedSocket.position) < 0.2f)
+        {
           return;
+        }
       }
 
-      if (physicalItemsSet.Contains(itemObj))
+      if (pendingSnaps.ContainsKey(itemObj))
       {
-          if (itemToSocket.TryGetValue(itemObj, out Transform assignedSocket))
-          {
-              Rigidbody checkRb = GetCachedRigidbody(itemObj);
-              if (checkRb != null && checkRb.isKinematic && Vector3.Distance(itemObj.transform.position, assignedSocket.position) < 0.2f)
-              {
-                  return;
-              }
-          }
-
-          if (pendingSnaps.ContainsKey(itemObj))
-          {
-              StopCoroutine(pendingSnaps[itemObj]);
-              pendingSnaps.Remove(itemObj);
-          }
-
-          if (snappedItems.Contains(itemObj))
-          {
-              snappedItems.Remove(itemObj);
-          }
-
-          if (itemToSocket.ContainsKey(itemObj))
-          {
-              Transform socket = itemToSocket[itemObj];
-              socketOccupancy.Remove(socket);
-              itemToSocket.Remove(itemObj);
-          }
-
-          Rigidbody rb = GetCachedRigidbody(itemObj);
-          if (rb != null)
-          {
-              rb.isKinematic = false;
-              rb.useGravity = true;
-          }
-
-          physicalItemsOnTray.Remove(itemObj);
-          physicalItemsSet.Remove(itemObj);
-
-          if (itemsOnTray.TryGetValue(tag, out int count2))
-          {
-              count2--;
-              if (count2 <= 0) itemsOnTray.Remove(tag);
-              else itemsOnTray[tag] = count2;
-          }
-
-          Debug.Log($"Removed {tag} (remaining: {(itemsOnTray.TryGetValue(tag, out int rem) ? rem : 0)})");
-
-          ValidateOrder();
+        StopCoroutine(pendingSnaps[itemObj]);
+        pendingSnaps.Remove(itemObj);
       }
+
+      if (snappedItems.Contains(itemObj))
+      {
+        snappedItems.Remove(itemObj);
+      }
+
+      if (itemToSocket.ContainsKey(itemObj))
+      {
+        Transform socket = itemToSocket[itemObj];
+        socketOccupancy.Remove(socket);
+        itemToSocket.Remove(itemObj);
+      }
+
+      Rigidbody rb = GetCachedRigidbody(itemObj);
+      if (rb != null)
+      {
+        rb.isKinematic = false;
+        rb.useGravity = true;
+      }
+
+      physicalItemsOnTray.Remove(itemObj);
+      physicalItemsSet.Remove(itemObj);
+
+      if (itemsOnTray.TryGetValue(tag, out int count2))
+      {
+        count2--;
+        if (count2 <= 0) itemsOnTray.Remove(tag);
+        else itemsOnTray[tag] = count2;
+      }
+
+      Debug.Log($"Removed {tag} (remaining: {(itemsOnTray.TryGetValue(tag, out int rem) ? rem : 0)})");
+
+      ValidateOrder();
+    }
   }
 
   private bool IsFoodOrDrinkTag(string tag)
@@ -389,74 +384,74 @@ public class TrayValidator : MonoBehaviour
 
   private bool IsSocketPhysicallyOccupied(Transform socket)
   {
-      if (socketOccupancy.ContainsKey(socket)) return true;
+    if (socketOccupancy.ContainsKey(socket)) return true;
 
-      foreach (GameObject item in physicalItemsSet)
+    foreach (GameObject item in physicalItemsSet)
+    {
+      if (item != null && Vector3.SqrMagnitude(item.transform.position - socket.position) < 0.05f)
       {
-          if (item != null && Vector3.SqrMagnitude(item.transform.position - socket.position) < 0.05f)
-          {
-              socketOccupancy[socket] = item;
-              itemToSocket[item] = socket;
-              return true;
-          }
+        socketOccupancy[socket] = item;
+        itemToSocket[item] = socket;
+        return true;
       }
-      return false;
+    }
+    return false;
   }
 
   private Transform GetSocketForItem(string itemTag, GameObject item)
   {
-      if (itemTag == "Blueberry" || itemTag == "GreenTea")
-      {
-          if (!IsSocketPhysicallyOccupied(drinkSocket1)) return drinkSocket1;
-          if (!IsSocketPhysicallyOccupied(drinkSocket2)) return drinkSocket2;
-          return null;
-      }
-
-      if (itemTag == "Bento1")
-      {
-          if (!IsSocketPhysicallyOccupied(bento1Socket)) return bento1Socket;
-          return null;
-      }
-
-      if (itemTag == "Bento2")
-      {
-          if (!IsSocketPhysicallyOccupied(bento2Socket)) return bento2Socket;
-          return null;
-      }
-
-      if (itemTag == "Apple")
-      {
-          if (!IsSocketPhysicallyOccupied(appleSocket1)) return appleSocket1;
-          if (!IsSocketPhysicallyOccupied(appleSocket2)) return appleSocket2;
-          if (!IsSocketPhysicallyOccupied(appleSocket3)) return appleSocket3;
-          return null;
-      }
-
-      if (itemTag == "Banana")
-      {
-          if (!IsSocketPhysicallyOccupied(bananaSocket1)) return bananaSocket1;
-          if (!IsSocketPhysicallyOccupied(bananaSocket2)) return bananaSocket2;
-          if (!IsSocketPhysicallyOccupied(bananaSocket3)) return bananaSocket3;
-          return null;
-      }
-
-      if (itemTag == "Orange")
-      {
-          if (!IsSocketPhysicallyOccupied(orangeSocket1)) return orangeSocket1;
-          if (!IsSocketPhysicallyOccupied(orangeSocket2)) return orangeSocket2;
-          if (!IsSocketPhysicallyOccupied(orangeSocket3)) return orangeSocket3;
-          return null;
-      }
-
-      if (itemTag == "Strawberry")
-      {
-          if (!IsSocketPhysicallyOccupied(strawberrySocket1)) return strawberrySocket1;
-          if (!IsSocketPhysicallyOccupied(strawberrySocket2)) return strawberrySocket2;
-          if (!IsSocketPhysicallyOccupied(strawberrySocket3)) return strawberrySocket3;
-          return null;
-      }
-
+    if (itemTag == "Blueberry" || itemTag == "GreenTea")
+    {
+      if (!IsSocketPhysicallyOccupied(drinkSocket1)) return drinkSocket1;
+      if (!IsSocketPhysicallyOccupied(drinkSocket2)) return drinkSocket2;
       return null;
+    }
+
+    if (itemTag == "Bento1")
+    {
+      if (!IsSocketPhysicallyOccupied(bento1Socket)) return bento1Socket;
+      return null;
+    }
+
+    if (itemTag == "Bento2")
+    {
+      if (!IsSocketPhysicallyOccupied(bento2Socket)) return bento2Socket;
+      return null;
+    }
+
+    if (itemTag == "Apple")
+    {
+      if (!IsSocketPhysicallyOccupied(appleSocket1)) return appleSocket1;
+      if (!IsSocketPhysicallyOccupied(appleSocket2)) return appleSocket2;
+      if (!IsSocketPhysicallyOccupied(appleSocket3)) return appleSocket3;
+      return null;
+    }
+
+    if (itemTag == "Banana")
+    {
+      if (!IsSocketPhysicallyOccupied(bananaSocket1)) return bananaSocket1;
+      if (!IsSocketPhysicallyOccupied(bananaSocket2)) return bananaSocket2;
+      if (!IsSocketPhysicallyOccupied(bananaSocket3)) return bananaSocket3;
+      return null;
+    }
+
+    if (itemTag == "Orange")
+    {
+      if (!IsSocketPhysicallyOccupied(orangeSocket1)) return orangeSocket1;
+      if (!IsSocketPhysicallyOccupied(orangeSocket2)) return orangeSocket2;
+      if (!IsSocketPhysicallyOccupied(orangeSocket3)) return orangeSocket3;
+      return null;
+    }
+
+    if (itemTag == "Strawberry")
+    {
+      if (!IsSocketPhysicallyOccupied(strawberrySocket1)) return strawberrySocket1;
+      if (!IsSocketPhysicallyOccupied(strawberrySocket2)) return strawberrySocket2;
+      if (!IsSocketPhysicallyOccupied(strawberrySocket3)) return strawberrySocket3;
+      return null;
+    }
+
+    return null;
   }
 
   private IEnumerator ResetMoneyPhysics(Rigidbody rb)
@@ -471,57 +466,57 @@ public class TrayValidator : MonoBehaviour
 
   private IEnumerator SnapToSocketAfterDelay(GameObject item, Transform socket)
   {
-      float elapsedTime = 0f;
-      Vector3 startPos = item.transform.position;
-      Quaternion startRot = item.transform.rotation;
+    float elapsedTime = 0f;
+    Vector3 startPos = item.transform.position;
+    Quaternion startRot = item.transform.rotation;
 
-      while (elapsedTime < snapDelay)
+    while (elapsedTime < snapDelay)
+    {
+      if (item == null || !physicalItemsSet.Contains(item))
       {
-          if (item == null || !physicalItemsSet.Contains(item))
-          {
-              yield break;
-          }
-
-          // Stop lerping if socket was reassigned to another item during animation
-          if (!socketOccupancy.TryGetValue(socket, out GameObject owner) || owner != item)
-          {
-              yield break;
-          }
-
-          elapsedTime += Time.deltaTime;
-          float t = Mathf.Clamp01(elapsedTime / snapDelay);
-
-          item.transform.position = Vector3.Lerp(startPos, socket.position, t);
-          item.transform.rotation = Quaternion.Lerp(startRot, socket.rotation, t);
-
-          yield return null;
+        yield break;
       }
 
-      if (item != null)
+      // Stop lerping if socket was reassigned to another item during animation
+      if (!socketOccupancy.TryGetValue(socket, out GameObject owner) || owner != item)
       {
-          // Verify this socket still belongs to this item (not stolen during lerp)
-          if (socketOccupancy.TryGetValue(socket, out GameObject finalOwner) && finalOwner == item)
-          {
-              item.transform.position = socket.position;
-              item.transform.rotation = socket.rotation;
-              snappedItems.Add(item);
-          }
-          else
-          {
-              // Socket stolen - just release the item
-              Rigidbody rb = GetCachedRigidbody(item);
-              if (rb != null)
-              {
-                  rb.isKinematic = false;
-                  rb.useGravity = true;
-              }
-          }
+        yield break;
       }
 
-      if (pendingSnaps.ContainsKey(item))
+      elapsedTime += Time.deltaTime;
+      float t = Mathf.Clamp01(elapsedTime / snapDelay);
+
+      item.transform.position = Vector3.Lerp(startPos, socket.position, t);
+      item.transform.rotation = Quaternion.Lerp(startRot, socket.rotation, t);
+
+      yield return null;
+    }
+
+    if (item != null)
+    {
+      // Verify this socket still belongs to this item (not stolen during lerp)
+      if (socketOccupancy.TryGetValue(socket, out GameObject finalOwner) && finalOwner == item)
       {
-          pendingSnaps.Remove(item);
+        item.transform.position = socket.position;
+        item.transform.rotation = socket.rotation;
+        snappedItems.Add(item);
       }
+      else
+      {
+        // Socket stolen - just release the item
+        Rigidbody rb = GetCachedRigidbody(item);
+        if (rb != null)
+        {
+          rb.isKinematic = false;
+          rb.useGravity = true;
+        }
+      }
+    }
+
+    if (pendingSnaps.ContainsKey(item))
+    {
+      pendingSnaps.Remove(item);
+    }
   }
 
   private void ValidateOrder()
@@ -549,25 +544,25 @@ public class TrayValidator : MonoBehaviour
 
   private void OnOrderComplete()
   {
-      orderActive = false;
-      StartCoroutine(ClearItemsBeforePayment());
+    orderActive = false;
+    StartCoroutine(ClearItemsBeforePayment());
   }
 
   private IEnumerator ClearItemsBeforePayment()
   {
-      yield return new WaitForSeconds(1.5f);
+    yield return new WaitForSeconds(1.5f);
 
-      ClearPhysicalItems();
+    ClearPhysicalItems();
 
-      if (orderProgressUI != null)
-      {
-          orderProgressUI.HideUI();
-      }
+    if (orderProgressUI != null)
+    {
+      orderProgressUI.HideUI();
+    }
 
-      if (PaymentHandler.Instance != null)
-      {
-          PaymentHandler.Instance.StartPaymentPhase();
-      }
+    if (PaymentHandler.Instance != null)
+    {
+      PaymentHandler.Instance.StartPaymentPhase();
+    }
   }
 
   public void ClearPhysicalItems()
@@ -655,49 +650,16 @@ public class TrayValidator : MonoBehaviour
 
   private IEnumerator DeleteMoneyAfterDelay()
   {
-      yield return new WaitForSeconds(1.5f);
+    yield return new WaitForSeconds(1.5f);
 
-      foreach (GameObject money in collectedMoney)
+    foreach (GameObject money in collectedMoney)
+    {
+      if (money != null)
       {
-          if (money != null)
-          {
-              Destroy(money);
-          }
+        Destroy(money);
       }
-      collectedMoney.Clear();
-      collectedMoneySet.Clear();
-      rbCache.Clear();
+    }
 
-      paymentPhase = false;
-      collectedChange = 0f;
-  }
-
-  /// <summary>
-  /// Plays feedback when a correct item is placed on the tray. This includes both visual and audio feedback to reinforce positive actions by the player. The VFX and SFX will play for a duration specified by vfxDuration before stopping. This feedback helps enhance the player's experience and satisfaction when they correctly fulfill order requirements.
-  /// </summary>
-  /// <returns></returns>
-  private IEnumerator CorrectItemFeedback()
-  {
-    correctItemVFX.Play();
-    correctItemSFX.Play();
-    Debug.Log("Correct item placed on tray.");
-    yield return new WaitForSeconds(vfxDuration);
-    correctItemVFX.Stop();
-    correctItemSFX.Stop();
-  }
-  
-  /// <summary>
-  /// Plays feedback when an incorrect item is placed on the tray. This includes both visual and audio feedback to inform the player of the mistake. The VFX and SFX will play for a duration specified by vfxDuration before stopping. This feedback helps reinforce the correct order requirements and enhances the player's learning experience.
-  /// </summary>
-  /// <returns></returns>
-  private IEnumerator IncorrectItemFeedback()
-  {
-    incorrectItemVFX.Play();
-    incorrectItemSFX.Play();
-    Debug.Log("Incorrect item placed on tray.");
-    yield return new WaitForSeconds(vfxDuration);
-    incorrectItemVFX.Stop();
-    incorrectItemSFX.Stop();
+    ClearCollectedChange();
   }
 }
-

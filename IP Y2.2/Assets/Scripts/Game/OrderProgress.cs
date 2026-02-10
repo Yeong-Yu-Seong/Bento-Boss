@@ -30,6 +30,7 @@ public class OrderProgressUI : MonoBehaviour
 
   private bool orderActive = false;
   private bool paymentMode = false;
+  private bool hasCollectedPayment = false;
 
   // Dirty tracking to avoid rebuilding UI every frame
   private int lastFoodCount = -1;
@@ -67,6 +68,7 @@ public class OrderProgressUI : MonoBehaviour
   public void ShowOrderProgress()
   {
     if (orderBubbleController == null) return;
+    hasCollectedPayment = false;
 
     int foodID = orderBubbleController.requiredFoodID;
     int drinkID = orderBubbleController.requiredDrinkID;
@@ -115,19 +117,27 @@ public class OrderProgressUI : MonoBehaviour
     if (drinkProgressText != null)
     {
       drinkProgressText.text = $"Payment Collected: ${paymentReceived:F2}";
-      drinkProgressText.color = redColor;
+      if (hasCollectedPayment)
+      {
+        drinkProgressText.color = completeColor;
+      }
+      else
+      {
+        drinkProgressText.color = redColor;
+      }
     }
 
     if (changeGivenText != null)
     {
       changeGivenText.gameObject.SetActive(true);
-      changeGivenText.text = "Change Given: $0.00";
       changeGivenText.color = incompleteColor;
     }
   }
 
   public void OnPaymentCollected()
   {
+    hasCollectedPayment = true;
+    
     if (drinkProgressText != null)
     {
       drinkProgressText.color = completeColor;
