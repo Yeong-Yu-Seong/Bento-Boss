@@ -12,6 +12,15 @@ public class TrayValidator : MonoBehaviour
   [Header("Order Complete Settings")]
   [Tooltip("Delay before moving to next customer after order complete (seconds)")]
 
+  [Header("VFX Settings")]
+  public ParticleSystem correctItemVFX;
+  public ParticleSystem incorrectItemVFX;
+  public float vfxDuration = 2f;
+
+  [Header("Sound Effects")]
+  public AudioSource correctItemSFX;
+  public AudioSource incorrectItemSFX;
+
   [Header("Socket References")]
   [Header("Drink Sockets")]
   public Transform drinkSocket1;
@@ -240,6 +249,7 @@ public class TrayValidator : MonoBehaviour
       if (IsCorrectItemForOrder(tag))
       {
           Transform targetSocket = GetSocketForItem(tag, itemObj);
+          StartCoroutine(CorrectItemFeedback()); // Play correct item feedback
           if (targetSocket != null)
           {
               // Only assign if this item doesn't already have a socket assignment
@@ -266,6 +276,9 @@ public class TrayValidator : MonoBehaviour
                   pendingSnaps[itemObj] = snapCoroutine;
               }
           }
+      } else
+      {
+          StartCoroutine(IncorrectItemFeedback()); // Play incorrect item feedback
       }
 
       ValidateOrder();
@@ -658,4 +671,33 @@ public class TrayValidator : MonoBehaviour
       paymentPhase = false;
       collectedChange = 0f;
   }
+
+  /// <summary>
+  /// Plays feedback when a correct item is placed on the tray. This includes both visual and audio feedback to reinforce positive actions by the player. The VFX and SFX will play for a duration specified by vfxDuration before stopping. This feedback helps enhance the player's experience and satisfaction when they correctly fulfill order requirements.
+  /// </summary>
+  /// <returns></returns>
+  private IEnumerator CorrectItemFeedback()
+  {
+    correctItemVFX.Play();
+    correctItemSFX.Play();
+    Debug.Log("Correct item placed on tray.");
+    yield return new WaitForSeconds(vfxDuration);
+    correctItemVFX.Stop();
+    correctItemSFX.Stop();
+  }
+  
+  /// <summary>
+  /// Plays feedback when an incorrect item is placed on the tray. This includes both visual and audio feedback to inform the player of the mistake. The VFX and SFX will play for a duration specified by vfxDuration before stopping. This feedback helps reinforce the correct order requirements and enhances the player's learning experience.
+  /// </summary>
+  /// <returns></returns>
+  private IEnumerator IncorrectItemFeedback()
+  {
+    incorrectItemVFX.Play();
+    incorrectItemSFX.Play();
+    Debug.Log("Incorrect item placed on tray.");
+    yield return new WaitForSeconds(vfxDuration);
+    incorrectItemVFX.Stop();
+    incorrectItemSFX.Stop();
+  }
 }
+
