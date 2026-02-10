@@ -46,7 +46,7 @@ GameObject:
   - component: {fileID: 5874719948444128707}
   - component: {fileID: 865912638806432043}
   - component: {fileID: 1057298032757236982}
-  - component: {fileID: 2529385490677524465}
+  - component: {fileID: 4765251830291796015}
   m_Layer: 0
   m_Name: crate_top
   m_TagString: Trash
@@ -281,7 +281,7 @@ MonoBehaviour:
   m_LimitAngularVelocity: 0
   m_MaxLinearVelocityDelta: 10
   m_MaxAngularVelocityDelta: 20
---- !u!65 &2529385490677524465
+--- !u!65 &4765251830291796015
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -300,8 +300,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.004199997, y: 0.00079450366, z: 0.0062000034}
-  m_Center: {x: 0, y: 0, z: 9.313226e-10}
+  m_Size: {x: 0.0041999966, y: 0.00079450366, z: 0.006200003}
+  m_Center: {x: -0.0000000037252903, y: 0, z: 0}
 --- !u!1 &6205529553289015615
 GameObject:
   m_ObjectHideFlags: 0
@@ -315,7 +315,7 @@ GameObject:
   - component: {fileID: 4686072878218832978}
   - component: {fileID: 4011884533477996566}
   - component: {fileID: 8660301611008765937}
-  - component: {fileID: 378543450847042193}
+  - component: {fileID: 5332583293455978165}
   m_Layer: 0
   m_Name: crate_bottom
   m_TagString: Trash
@@ -550,7 +550,7 @@ MonoBehaviour:
   m_LimitAngularVelocity: 0
   m_MaxLinearVelocityDelta: 10
   m_MaxAngularVelocityDelta: 20
---- !u!65 &378543450847042193
+--- !u!65 &5332583293455978165
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -570,4 +570,4 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 0.0039999974, y: 0.0023291945, z: 0.0060000014}
-  m_Center: {x: 0, y: -5.820766e-10, z: 9.313226e-10}
+  m_Center: {x: 0, y: -1.1641532e-10, z: 0}

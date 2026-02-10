@@ -1,0 +1,1414 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bento Canteen — Dashboard</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Nunito:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              cream: "#FFF4D8",
+              rice: "#FDFCF8",
+              loam: "#2C2C24",
+              moss: "#5D7052",
+              "moss-light": "rgba(93,112,82,0.1)",
+              clay: "#C18C5D",
+              sand: "#E6DCCD",
+              bark: "#4A4A40",
+              stone: "#F0EBE5",
+              grass: "#78786C",
+              timber: "#DED8CF",
+              sienna: "#A85448",
+              ember: "#AC3737",
+            },
+            fontFamily: {
+              heading: ["Fraunces", "Georgia", "serif"],
+              body: ["Nunito", "sans-serif"],
+            },
+            borderRadius: {
+              blob: "60% 40% 30% 70% / 60% 30% 70% 40%",
+              "blob-2": "40% 60% 70% 30% / 40% 70% 30% 60%",
+              organic: "2rem",
+              "organic-lg": "3rem",
+            },
+            boxShadow: {
+              soft: "0 4px 20px -2px rgba(93, 112, 82, 0.15)",
+              float: "0 10px 40px -10px rgba(193, 140, 93, 0.2)",
+              lift: "0 20px 40px -10px rgba(93, 112, 82, 0.15)",
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      /* Grain texture overlay */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        pointer-events: none;
+        opacity: 0.035;
+        mix-blend-mode: multiply;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        background-repeat: repeat;
+        background-size: 200px 200px;
+      }
+
+      /* Smooth scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #ded8cf;
+        border-radius: 999px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #c18c5d;
+      }
+
+      /* Spinner keyframes */
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .spinner {
+        width: 20px;
+        height: 20px;
+        border: 2.5px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        display: inline-block;
+        vertical-align: middle;
+      }
+      .spinner-dark {
+        border-color: rgba(93, 112, 82, 0.2);
+        border-top-color: #5d7052;
+      }
+
+      /* Skeleton pulse */
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.4;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+      .skeleton {
+        background: linear-gradient(
+          90deg,
+          #e6dccd 25%,
+          #f0ebe5 50%,
+          #e6dccd 75%
+        );
+        background-size: 200% 100%;
+        animation: pulse 1.5s ease-in-out infinite;
+        border-radius: 1rem;
+      }
+
+      /* Toast animation */
+      @keyframes toast-in {
+        from {
+          transform: translateY(-1rem);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      @keyframes toast-out {
+        from {
+          transform: translateY(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateY(-1rem);
+          opacity: 0;
+        }
+      }
+      .toast-enter {
+        animation: toast-in 0.3s ease-out forwards;
+      }
+      .toast-exit {
+        animation: toast-out 0.3s ease-in forwards;
+      }
+
+      /* Slide-down for session panel */
+      @keyframes slide-down {
+        from {
+          max-height: 0;
+          opacity: 0;
+        }
+        to {
+          max-height: 3000px;
+          opacity: 1;
+        }
+      }
+      .slide-down {
+        animation: slide-down 0.4s ease-out forwards;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+
+  <body
+    class="bg-cream font-body text-loam min-h-screen relative overflow-x-hidden"
+  >
+    <!-- ==================== TOAST CONTAINER ==================== -->
+    <div
+      id="toast-container"
+      class="fixed top-6 right-6 z-[10000] flex flex-col gap-3"
+    ></div>
+
+    <!-- ==================== AUTH VIEW ==================== -->
+    <div
+      id="view-auth"
+      class="min-h-screen flex items-center justify-center p-4 relative"
+    >
+      <!-- Background blob -->
+      <div
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-moss/10 rounded-blob blur-3xl pointer-events-none"
+      ></div>
+      <div
+        class="absolute top-1/4 right-1/4 w-[300px] h-[300px] bg-clay/10 rounded-blob-2 blur-3xl pointer-events-none"
+      ></div>
+
+      <div class="relative z-10 w-full max-w-md">
+        <!-- Logo / Title -->
+        <div class="text-center mb-8">
+          <h1
+            class="font-heading text-3xl md:text-4xl font-800 text-loam tracking-tight"
+          >
+            Bento Canteen
+          </h1>
+          <p class="font-body text-grass text-sm mt-2">
+            VR Canteen Simulator — Admin Dashboard
+          </p>
+        </div>
+
+        <!-- Auth Card -->
+        <div class="bg-rice rounded-[2rem] shadow-soft p-8 md:p-10">
+          <!-- Tab Switcher -->
+          <div class="flex bg-sand rounded-full p-1 mb-8">
+            <button
+              id="tab-login"
+              onclick="switchAuthTab('login')"
+              class="flex-1 py-2.5 rounded-full text-sm font-body font-600 transition-all duration-300 bg-rice text-loam shadow-soft"
+            >
+              Login
+            </button>
+            <button
+              id="tab-register"
+              onclick="switchAuthTab('register')"
+              class="flex-1 py-2.5 rounded-full text-sm font-body font-600 transition-all duration-300 text-grass"
+            >
+              Register
+            </button>
+          </div>
+
+          <!-- Login Form -->
+          <form id="form-login" class="space-y-4" onsubmit="handleLogin(event)">
+            <div>
+              <input
+                type="email"
+                id="login-email"
+                placeholder="Email"
+                class="w-full bg-stone border border-timber/50 rounded-full px-5 py-3 text-sm font-body text-loam placeholder:text-grass/60 focus:outline-none focus:ring-2 focus:ring-moss/30 focus:border-moss transition-all duration-300"
+              />
+              <p
+                id="login-email-error"
+                class="text-ember text-xs mt-1 ml-4 hidden"
+              ></p>
+            </div>
+            <div>
+              <input
+                type="password"
+                id="login-password"
+                placeholder="Password"
+                class="w-full bg-stone border border-timber/50 rounded-full px-5 py-3 text-sm font-body text-loam placeholder:text-grass/60 focus:outline-none focus:ring-2 focus:ring-moss/30 focus:border-moss transition-all duration-300"
+              />
+              <p
+                id="login-password-error"
+                class="text-ember text-xs mt-1 ml-4 hidden"
+              ></p>
+            </div>
+            <button
+              type="submit"
+              id="login-btn"
+              class="w-full bg-moss text-rice font-body font-700 py-3 rounded-full text-sm hover:scale-105 active:scale-95 transition-all duration-300 shadow-soft hover:shadow-float disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              Sign In
+            </button>
+          </form>
+
+          <!-- Register Form -->
+          <form
+            id="form-register"
+            class="space-y-4 hidden"
+            onsubmit="handleRegister(event)"
+          >
+            <div>
+              <input
+                type="text"
+                id="reg-username"
+                placeholder="Username"
+                class="w-full bg-stone border border-timber/50 rounded-full px-5 py-3 text-sm font-body text-loam placeholder:text-grass/60 focus:outline-none focus:ring-2 focus:ring-moss/30 focus:border-moss transition-all duration-300"
+              />
+              <p
+                id="reg-username-error"
+                class="text-ember text-xs mt-1 ml-4 hidden"
+              ></p>
+            </div>
+            <div>
+              <input
+                type="email"
+                id="reg-email"
+                placeholder="Email"
+                class="w-full bg-stone border border-timber/50 rounded-full px-5 py-3 text-sm font-body text-loam placeholder:text-grass/60 focus:outline-none focus:ring-2 focus:ring-moss/30 focus:border-moss transition-all duration-300"
+              />
+              <p
+                id="reg-email-error"
+                class="text-ember text-xs mt-1 ml-4 hidden"
+              ></p>
+            </div>
+            <div>
+              <input
+                type="password"
+                id="reg-password"
+                placeholder="Password"
+                class="w-full bg-stone border border-timber/50 rounded-full px-5 py-3 text-sm font-body text-loam placeholder:text-grass/60 focus:outline-none focus:ring-2 focus:ring-moss/30 focus:border-moss transition-all duration-300"
+              />
+              <p
+                id="reg-password-error"
+                class="text-ember text-xs mt-1 ml-4 hidden"
+              ></p>
+            </div>
+            <div>
+              <input
+                type="password"
+                id="reg-confirm"
+                placeholder="Confirm Password"
+                class="w-full bg-stone border border-timber/50 rounded-full px-5 py-3 text-sm font-body text-loam placeholder:text-grass/60 focus:outline-none focus:ring-2 focus:ring-moss/30 focus:border-moss transition-all duration-300"
+              />
+              <p
+                id="reg-confirm-error"
+                class="text-ember text-xs mt-1 ml-4 hidden"
+              ></p>
+            </div>
+            <button
+              type="submit"
+              id="register-btn"
+              class="w-full bg-moss text-rice font-body font-700 py-3 rounded-full text-sm hover:scale-105 active:scale-95 transition-all duration-300 shadow-soft hover:shadow-float disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              Create Account
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== DASHBOARD VIEW ==================== -->
+    <div id="view-dashboard" class="hidden min-h-screen">
+      <!-- Background blobs -->
+      <div
+        class="fixed top-0 left-0 w-[600px] h-[600px] bg-moss/5 rounded-blob blur-3xl pointer-events-none"
+      ></div>
+      <div
+        class="fixed bottom-0 right-0 w-[500px] h-[500px] bg-clay/8 rounded-blob-2 blur-3xl pointer-events-none"
+      ></div>
+      <div
+        class="fixed top-1/2 right-1/4 w-[400px] h-[400px] bg-cream/50 rounded-blob blur-3xl pointer-events-none"
+      ></div>
+
+      <!-- Sticky Header -->
+      <header class="sticky top-4 z-50 mx-4 md:mx-8 mb-6">
+        <div
+          class="bg-rice/70 backdrop-blur-md rounded-full shadow-soft px-6 md:px-8 py-3 flex items-center justify-between"
+        >
+          <h2 class="font-heading text-xl font-700 text-loam tracking-tight">
+            Bento Canteen
+          </h2>
+          <div class="flex items-center gap-3">
+            <span
+              id="header-username"
+              class="font-body text-sm text-grass hidden md:inline"
+            ></span>
+            <button
+              onclick="handleLogout()"
+              class="border border-clay/60 text-clay font-body font-600 text-sm px-5 py-2 rounded-full hover:bg-clay hover:text-rice hover:scale-105 active:scale-95 transition-all duration-300"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="relative z-10 px-4 md:px-8 pb-16 max-w-7xl mx-auto">
+        <!-- Loading skeleton (shown while data loads) -->
+        <div id="dashboard-loading" class="space-y-8">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="skeleton h-32 rounded-[2rem]"></div>
+            <div class="skeleton h-32 rounded-[2rem]"></div>
+            <div class="skeleton h-32 rounded-[2rem]"></div>
+            <div class="skeleton h-32 rounded-[2rem]"></div>
+          </div>
+          <div class="skeleton h-64 rounded-[2rem]"></div>
+        </div>
+
+        <!-- Dashboard content (hidden until data loaded) -->
+        <div id="dashboard-content" class="hidden space-y-8">
+          <!-- Section A: Overview Stats -->
+          <section>
+            <h3
+              class="font-heading text-xl md:text-2xl font-700 text-loam mb-4"
+            >
+              Overview
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div
+                class="bg-rice rounded-[2rem] shadow-soft p-6 hover:-translate-y-1 hover:shadow-float transition-all duration-300"
+              >
+                <p
+                  class="font-heading text-3xl font-800 text-moss"
+                  id="stat-players"
+                >
+                  0
+                </p>
+                <p class="font-body text-sm text-grass mt-1">Total Players</p>
+              </div>
+              <div
+                class="bg-rice rounded-[2rem] shadow-soft p-6 hover:-translate-y-1 hover:shadow-float transition-all duration-300"
+              >
+                <p
+                  class="font-heading text-3xl font-800 text-moss"
+                  id="stat-sessions"
+                >
+                  0
+                </p>
+                <p class="font-body text-sm text-grass mt-1">Total Sessions</p>
+              </div>
+              <div
+                class="bg-rice rounded-[2rem] shadow-soft p-6 hover:-translate-y-1 hover:shadow-float transition-all duration-300"
+              >
+                <p
+                  class="font-heading text-3xl font-800 text-moss"
+                  id="stat-avg-balance"
+                >
+                  $0.00
+                </p>
+                <p class="font-body text-sm text-grass mt-1">Avg Balance</p>
+              </div>
+              <div
+                class="bg-rice rounded-[2rem] shadow-soft p-6 hover:-translate-y-1 hover:shadow-float transition-all duration-300"
+              >
+                <p
+                  class="font-heading text-3xl font-800 text-moss"
+                  id="stat-avg-time"
+                >
+                  00:00
+                </p>
+                <p class="font-body text-sm text-grass mt-1">
+                  Avg Session Time
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section B: Players Table -->
+          <section>
+            <h3
+              class="font-heading text-xl md:text-2xl font-700 text-loam mb-4"
+            >
+              Players
+            </h3>
+            <div class="bg-rice rounded-[2rem] shadow-soft overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm font-body">
+                  <thead>
+                    <tr class="border-b border-timber/50">
+                      <th class="text-left px-6 py-4 text-grass font-600">
+                        Username
+                      </th>
+                      <th class="text-left px-6 py-4 text-grass font-600">
+                        Email
+                      </th>
+                      <th class="text-left px-6 py-4 text-grass font-600">
+                        Sessions
+                      </th>
+                      <th class="text-left px-6 py-4 text-grass font-600">
+                        Best Score
+                      </th>
+                      <th class="text-left px-6 py-4 text-grass font-600">
+                        Last Played
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="players-tbody"></tbody>
+                </table>
+              </div>
+              <!-- Empty state -->
+              <div id="players-empty" class="hidden text-center py-16">
+                <p class="text-grass text-sm">
+                  No players yet. Data will appear when users register and play.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section C: Session Detail Panel -->
+          <section id="session-panel" class="hidden">
+            <div
+              class="bg-rice rounded-[2rem] rounded-tl-[3rem] shadow-soft p-6 md:p-8 slide-down"
+            >
+              <!-- Panel header -->
+              <div
+                class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
+              >
+                <div>
+                  <h3
+                    class="font-heading text-xl font-700 text-loam"
+                    id="session-panel-title"
+                  >
+                    Player Sessions
+                  </h3>
+                  <p
+                    class="font-body text-sm text-grass"
+                    id="session-panel-subtitle"
+                  ></p>
+                </div>
+                <div class="flex items-center gap-3">
+                  <select
+                    id="session-selector"
+                    class="bg-stone border border-timber/50 rounded-full px-4 py-2 text-sm font-body text-loam focus:outline-none focus:ring-2 focus:ring-moss/30 transition-all duration-300"
+                  ></select>
+                  <button
+                    onclick="closeSessionPanel()"
+                    class="w-9 h-9 rounded-full bg-sand hover:bg-timber flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 text-grass"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Session summary cards -->
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-cream/60 rounded-[1.5rem] p-4 text-center">
+                  <p
+                    class="font-heading text-2xl font-800 text-moss"
+                    id="detail-balance"
+                  >
+                    $0.00
+                  </p>
+                  <p class="font-body text-xs text-grass mt-1">Final Balance</p>
+                </div>
+                <div class="bg-cream/60 rounded-[1.5rem] p-4 text-center">
+                  <p
+                    class="font-heading text-2xl font-800 text-loam"
+                    id="detail-time"
+                  >
+                    00:00
+                  </p>
+                  <p class="font-body text-xs text-grass mt-1">Total Time</p>
+                </div>
+                <div class="bg-cream/60 rounded-[1.5rem] p-4 text-center">
+                  <p
+                    class="font-heading text-2xl font-800 text-loam"
+                    id="detail-trash"
+                  >
+                    0
+                  </p>
+                  <p class="font-body text-xs text-grass mt-1">
+                    Trash Disposed
+                  </p>
+                </div>
+                <div class="bg-cream/60 rounded-[1.5rem] p-4 text-center">
+                  <span
+                    id="detail-bento"
+                    class="inline-block font-body text-xs font-700 px-3 py-1 rounded-full"
+                    >—</span
+                  >
+                  <p class="font-body text-xs text-grass mt-2">
+                    Bento Unlocked
+                  </p>
+                </div>
+              </div>
+
+              <!-- Inventory -->
+              <div class="mb-6">
+                <h4 class="font-heading text-lg font-700 text-loam mb-3">
+                  Inventory
+                </h4>
+                <div id="inventory-chips" class="flex flex-wrap gap-2"></div>
+              </div>
+
+              <!-- Transactions -->
+              <div>
+                <h4 class="font-heading text-lg font-700 text-loam mb-3">
+                  Transaction History
+                </h4>
+                <div
+                  class="overflow-x-auto rounded-[1.5rem] border border-timber/50"
+                >
+                  <table class="w-full text-sm font-body">
+                    <thead>
+                      <tr class="border-b border-timber/50 bg-stone/50">
+                        <th class="text-left px-4 py-3 text-grass font-600">
+                          Order
+                        </th>
+                        <th class="text-left px-4 py-3 text-grass font-600">
+                          Food (Qty)
+                        </th>
+                        <th class="text-left px-4 py-3 text-grass font-600">
+                          Drink (Qty)
+                        </th>
+                        <th class="text-left px-4 py-3 text-grass font-600">
+                          Cost
+                        </th>
+                        <th class="text-left px-4 py-3 text-grass font-600">
+                          Paid
+                        </th>
+                        <th class="text-left px-4 py-3 text-grass font-600">
+                          Change
+                        </th>
+                        <th class="text-center px-4 py-3 text-grass font-600">
+                          Item?
+                        </th>
+                        <th class="text-center px-4 py-3 text-grass font-600">
+                          Change?
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody id="transactions-tbody"></tbody>
+                  </table>
+                </div>
+                <div id="transactions-empty" class="hidden text-center py-8">
+                  <p class="text-grass text-sm">
+                    No transactions recorded in this session.
+                  </p>
+                </div>
+                <!-- Accuracy summary -->
+                <div
+                  id="accuracy-summary"
+                  class="mt-4 flex flex-wrap gap-4 items-center"
+                ></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section D: Leaderboard -->
+          <section>
+            <h3
+              class="font-heading text-xl md:text-2xl font-700 text-loam mb-4"
+            >
+              Leaderboard
+            </h3>
+            <div class="bg-rice rounded-[2rem] shadow-soft overflow-hidden">
+              <div
+                id="leaderboard-list"
+                class="divide-y divide-timber/30"
+              ></div>
+              <div id="leaderboard-empty" class="hidden text-center py-16">
+                <p class="text-grass text-sm">
+                  No sessions recorded yet. The leaderboard will populate after
+                  players complete sessions.
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
+        <!-- /dashboard-content -->
+      </main>
+    </div>
+    <!-- /view-dashboard -->
+
+    <!-- ==================== FIREBASE & APP LOGIC ==================== -->
+    <script type="module">
+      // --- Firebase SDK imports (v12 modular, CDN) ---
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+      import {
+        getAuth,
+        createUserWithEmailAndPassword,
+        signInWithEmailAndPassword,
+        signOut,
+        onAuthStateChanged,
+      } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+      import {
+        getDatabase,
+        ref,
+        set,
+        onValue,
+      } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+
+      // --- Firebase config ---
+      const firebaseConfig = {
+        apiKey: "AIzaSyBIlVLrB2iTMuy-rcj33pZUJaiWgxXC-aM",
+        authDomain: "ip-y2-2.firebaseapp.com",
+        databaseURL:
+          "https://ip-y2-2-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "ip-y2-2",
+        storageBucket: "ip-y2-2.firebasestorage.app",
+        messagingSenderId: "460221501076",
+        appId: "1:460221501076:web:fa88ac6d5ee80b23bdae81",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getDatabase(app);
+
+      // =====================================================
+      //  GLOBAL STATE
+      // =====================================================
+      let usersData = null; // snapshot of /users
+      let sessionsData = null; // snapshot of /sessions
+      let currentUser = null;
+      let selectedPlayerUid = null;
+      let selectedSessionKey = null;
+      let listenersAttached = false;
+
+      // =====================================================
+      //  UTILITY HELPERS
+      // =====================================================
+      function $(id) {
+        return document.getElementById(id);
+      }
+
+      function formatTime(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = Math.floor(seconds % 60);
+        return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+      }
+
+      function formatMoney(n) {
+        return `$${Number(n).toFixed(2)}`;
+      }
+
+      function formatDate(str) {
+        if (!str) return "—";
+        try {
+          const d = new Date(str);
+          if (isNaN(d)) return str;
+          return d.toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          });
+        } catch {
+          return str;
+        }
+      }
+
+      function formatSessionKey(key) {
+        // Converts "20260208_2109" → "08 Feb 2026, 21:09"
+        if (!key) return key;
+        const m = key.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})$/);
+        if (!m) return key;
+        try {
+          const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+          return (
+            d.toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            }) +
+            ", " +
+            d.toLocaleTimeString("en-GB", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          );
+        } catch {
+          return key;
+        }
+      }
+
+      // =====================================================
+      //  TOAST NOTIFICATIONS
+      // =====================================================
+      function showToast(message, type = "error") {
+        const container = $("toast-container");
+        const colors = {
+          error: "bg-ember text-rice",
+          success: "bg-moss text-rice",
+          info: "bg-clay text-rice",
+        };
+        const el = document.createElement("div");
+        el.className = `${colors[type] || colors.info} font-body text-sm px-5 py-3 rounded-full shadow-float toast-enter`;
+        el.textContent = message;
+        container.appendChild(el);
+        setTimeout(() => {
+          el.classList.remove("toast-enter");
+          el.classList.add("toast-exit");
+          el.addEventListener("animationend", () => el.remove());
+        }, 4000);
+      }
+
+      // =====================================================
+      //  AUTH TAB SWITCHING
+      // =====================================================
+      window.switchAuthTab = function (tab) {
+        const loginTab = $("tab-login");
+        const regTab = $("tab-register");
+        const loginForm = $("form-login");
+        const regForm = $("form-register");
+        clearAllErrors();
+
+        if (tab === "login") {
+          loginTab.className =
+            "flex-1 py-2.5 rounded-full text-sm font-body font-600 transition-all duration-300 bg-rice text-loam shadow-soft";
+          regTab.className =
+            "flex-1 py-2.5 rounded-full text-sm font-body font-600 transition-all duration-300 text-grass";
+          loginForm.classList.remove("hidden");
+          regForm.classList.add("hidden");
+        } else {
+          regTab.className =
+            "flex-1 py-2.5 rounded-full text-sm font-body font-600 transition-all duration-300 bg-rice text-loam shadow-soft";
+          loginTab.className =
+            "flex-1 py-2.5 rounded-full text-sm font-body font-600 transition-all duration-300 text-grass";
+          regForm.classList.remove("hidden");
+          loginForm.classList.add("hidden");
+        }
+      };
+
+      // =====================================================
+      //  FORM VALIDATION
+      // =====================================================
+      function showError(id, msg) {
+        const el = $(id);
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.remove("hidden");
+      }
+
+      function hideError(id) {
+        const el = $(id);
+        if (!el) return;
+        el.textContent = "";
+        el.classList.add("hidden");
+      }
+
+      function clearAllErrors() {
+        document.querySelectorAll('[id$="-error"]').forEach((el) => {
+          el.textContent = "";
+          el.classList.add("hidden");
+        });
+      }
+
+      function validateEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      }
+
+      function mapAuthError(code) {
+        const map = {
+          "auth/email-already-in-use": "This email is already registered",
+          "auth/wrong-password": "Incorrect password",
+          "auth/user-not-found": "No account found with this email",
+          "auth/weak-password": "Password must be at least 6 characters",
+          "auth/invalid-email": "Please enter a valid email",
+          "auth/invalid-credential": "Invalid email or password",
+          "auth/too-many-requests": "Too many attempts. Please try again later",
+          "auth/network-request-failed": "Network error. Check your connection",
+        };
+        return map[code] || "An error occurred. Please try again.";
+      }
+
+      function setButtonLoading(btn, loading, loadingText) {
+        if (loading) {
+          btn.disabled = true;
+          btn.dataset.origText = btn.textContent;
+          btn.innerHTML = `<span class="spinner mr-2"></span>${loadingText}`;
+        } else {
+          btn.disabled = false;
+          btn.textContent = btn.dataset.origText || "Submit";
+        }
+      }
+
+      // =====================================================
+      //  AUTH HANDLERS
+      // =====================================================
+      window.handleLogin = async function (e) {
+        e.preventDefault();
+        clearAllErrors();
+
+        const email = $("login-email").value.trim();
+        const password = $("login-password").value;
+        let valid = true;
+
+        if (!email) {
+          showError("login-email-error", "Email is required");
+          valid = false;
+        } else if (!validateEmail(email)) {
+          showError("login-email-error", "Please enter a valid email");
+          valid = false;
+        }
+        if (!password) {
+          showError("login-password-error", "Password is required");
+          valid = false;
+        }
+        if (!valid) return;
+
+        const btn = $("login-btn");
+        setButtonLoading(btn, true, "Signing in...");
+
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+          // onAuthStateChanged will handle view switch
+        } catch (err) {
+          showToast(mapAuthError(err.code), "error");
+        } finally {
+          setButtonLoading(btn, false);
+        }
+      };
+
+      window.handleRegister = async function (e) {
+        e.preventDefault();
+        clearAllErrors();
+
+        const username = $("reg-username").value.trim();
+        const email = $("reg-email").value.trim();
+        const password = $("reg-password").value;
+        const confirm = $("reg-confirm").value;
+        let valid = true;
+
+        if (!username) {
+          showError("reg-username-error", "Username is required");
+          valid = false;
+        }
+        if (!email) {
+          showError("reg-email-error", "Email is required");
+          valid = false;
+        } else if (!validateEmail(email)) {
+          showError("reg-email-error", "Please enter a valid email");
+          valid = false;
+        }
+        if (!password) {
+          showError("reg-password-error", "Password is required");
+          valid = false;
+        } else if (password.length < 6) {
+          showError(
+            "reg-password-error",
+            "Password must be at least 6 characters",
+          );
+          valid = false;
+        }
+        if (!confirm) {
+          showError("reg-confirm-error", "Please confirm your password");
+          valid = false;
+        } else if (password !== confirm) {
+          showError("reg-confirm-error", "Passwords do not match");
+          valid = false;
+        }
+        if (!valid) return;
+
+        const btn = $("register-btn");
+        setButtonLoading(btn, true, "Creating account...");
+
+        try {
+          const cred = await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password,
+          );
+          // Write user profile to Realtime Database
+          await set(ref(db, `users/${cred.user.uid}`), {
+            email: email,
+            username: username,
+          });
+          showToast("Account created successfully!", "success");
+        } catch (err) {
+          showToast(mapAuthError(err.code), "error");
+        } finally {
+          setButtonLoading(btn, false);
+        }
+      };
+
+      window.handleLogout = async function () {
+        try {
+          await signOut(auth);
+        } catch (err) {
+          showToast("Failed to sign out", "error");
+        }
+      };
+
+      // =====================================================
+      //  VIEW SWITCHING
+      // =====================================================
+      function showView(view) {
+        $("view-auth").classList.toggle("hidden", view !== "auth");
+        $("view-dashboard").classList.toggle("hidden", view !== "dashboard");
+      }
+
+      // =====================================================
+      //  AUTH STATE OBSERVER — persists login across refresh
+      // =====================================================
+      onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        if (user) {
+          showView("dashboard");
+          $("header-username").textContent = user.email;
+          if (!listenersAttached) {
+            attachRealtimeListeners();
+            listenersAttached = true;
+          }
+        } else {
+          showView("auth");
+          listenersAttached = false;
+          usersData = null;
+          sessionsData = null;
+        }
+      });
+
+      // =====================================================
+      //  REAL-TIME DATABASE LISTENERS
+      // =====================================================
+      function attachRealtimeListeners() {
+        const usersRef = ref(db, "users");
+        const sessionsRef = ref(db, "sessions");
+
+        // Listen to /users in real-time
+        onValue(
+          usersRef,
+          (snapshot) => {
+            usersData = snapshot.val() || {};
+            onDataUpdate();
+          },
+          (err) => {
+            showToast("Failed to load user data: " + err.message, "error");
+          },
+        );
+
+        // Listen to /sessions in real-time
+        onValue(
+          sessionsRef,
+          (snapshot) => {
+            sessionsData = snapshot.val() || {};
+            onDataUpdate();
+          },
+          (err) => {
+            showToast("Failed to load session data: " + err.message, "error");
+          },
+        );
+      }
+
+      // =====================================================
+      //  DATA UPDATE — recalculate and re-render everything
+      // =====================================================
+      function onDataUpdate() {
+        // Wait for both datasets
+        if (usersData === null || sessionsData === null) return;
+
+        // Show content, hide loading
+        $("dashboard-loading").classList.add("hidden");
+        $("dashboard-content").classList.remove("hidden");
+
+        // Update header username from DB if available
+        if (currentUser && usersData[currentUser.uid]) {
+          $("header-username").textContent =
+            usersData[currentUser.uid].username || currentUser.email;
+        }
+
+        renderStats();
+        renderPlayersTable();
+        renderLeaderboard();
+
+        // Re-render session detail if one is open
+        if (selectedPlayerUid) {
+          renderSessionDetail(selectedPlayerUid, selectedSessionKey);
+        }
+      }
+
+      // =====================================================
+      //  SECTION A: OVERVIEW STATS
+      // =====================================================
+      function renderStats() {
+        const userCount = Object.keys(usersData).length;
+        let totalSessions = 0;
+        let totalBalance = 0;
+        let totalTime = 0;
+
+        for (const uid of Object.keys(sessionsData)) {
+          const userSessions = sessionsData[uid];
+          for (const sKey of Object.keys(userSessions)) {
+            totalSessions++;
+            const summary = userSessions[sKey]?.session_summary;
+            if (summary) {
+              totalBalance += summary.final_balance || 0;
+              totalTime += summary.total_time_seconds || 0;
+            }
+          }
+        }
+
+        $("stat-players").textContent = userCount;
+        $("stat-sessions").textContent = totalSessions;
+        $("stat-avg-balance").textContent =
+          totalSessions > 0
+            ? formatMoney(totalBalance / totalSessions)
+            : "$0.00";
+        $("stat-avg-time").textContent =
+          totalSessions > 0 ? formatTime(totalTime / totalSessions) : "00:00";
+      }
+
+      // =====================================================
+      //  SECTION B: PLAYERS TABLE
+      // =====================================================
+      function renderPlayersTable() {
+        const tbody = $("players-tbody");
+        const emptyEl = $("players-empty");
+        const uids = Object.keys(usersData);
+
+        if (uids.length === 0) {
+          tbody.innerHTML = "";
+          emptyEl.classList.remove("hidden");
+          return;
+        }
+        emptyEl.classList.add("hidden");
+
+        let rows = "";
+        uids.forEach((uid, i) => {
+          const user = usersData[uid];
+          const userSessions = sessionsData[uid] || {};
+          const sessionKeys = Object.keys(userSessions);
+          const sessionCount = sessionKeys.length;
+
+          let bestScore = 0;
+          let lastPlayed = null;
+
+          for (const sKey of sessionKeys) {
+            const summary = userSessions[sKey]?.session_summary;
+            if (summary) {
+              if ((summary.final_balance || 0) > bestScore)
+                bestScore = summary.final_balance;
+              const completed = summary.completed_at
+                ? new Date(summary.completed_at)
+                : null;
+              if (completed && (!lastPlayed || completed > lastPlayed))
+                lastPlayed = completed;
+            }
+          }
+
+          const isSelected = uid === selectedPlayerUid;
+          const bgClass = isSelected
+            ? "bg-moss/10"
+            : i % 2 === 1
+              ? "bg-stone/30"
+              : "";
+
+          rows += `
+          <tr class="border-b border-timber/30 hover:bg-sand/50 cursor-pointer transition-all duration-300 ${bgClass}"
+              onclick="selectPlayer('${uid}')">
+            <td class="px-6 py-4 font-600">${user.username || "—"}</td>
+            <td class="px-6 py-4 text-grass">${user.email || "—"}</td>
+            <td class="px-6 py-4">${sessionCount}</td>
+            <td class="px-6 py-4 font-heading font-700 text-moss">${sessionCount > 0 ? formatMoney(bestScore) : "—"}</td>
+            <td class="px-6 py-4 text-grass">${lastPlayed ? formatDate(lastPlayed.toISOString()) : "—"}</td>
+          </tr>`;
+        });
+
+        tbody.innerHTML = rows;
+      }
+
+      // =====================================================
+      //  SECTION C: SESSION DETAIL PANEL
+      // =====================================================
+      window.selectPlayer = function (uid) {
+        if (selectedPlayerUid === uid) {
+          closeSessionPanel();
+          return;
+        }
+        selectedPlayerUid = uid;
+        selectedSessionKey = null;
+        renderPlayersTable(); // re-render to highlight row
+        renderSessionDetail(uid);
+        $("session-panel").classList.remove("hidden");
+        // Smooth scroll to panel
+        setTimeout(
+          () =>
+            $("session-panel").scrollIntoView({
+              behavior: "smooth",
+              block: "nearest",
+            }),
+          100,
+        );
+      };
+
+      window.closeSessionPanel = function () {
+        selectedPlayerUid = null;
+        selectedSessionKey = null;
+        $("session-panel").classList.add("hidden");
+        renderPlayersTable();
+      };
+
+      function renderSessionDetail(uid, sessionKey) {
+        const user = usersData[uid];
+        const userSessions = sessionsData[uid] || {};
+        const sessionKeys = Object.keys(userSessions).sort().reverse();
+
+        $("session-panel-title").textContent =
+          `${user?.username || "Player"}'s Sessions`;
+        $("session-panel-subtitle").textContent = user?.email || "";
+
+        // Populate session selector
+        const selector = $("session-selector");
+        selector.innerHTML = "";
+        if (sessionKeys.length === 0) {
+          selector.innerHTML = "<option>No sessions</option>";
+          clearSessionDetail();
+          return;
+        }
+
+        sessionKeys.forEach((k) => {
+          const opt = document.createElement("option");
+          opt.value = k;
+          opt.textContent = formatSessionKey(k);
+          selector.appendChild(opt);
+        });
+
+        // If a specific session was requested, select it; otherwise use the latest
+        const activeKey =
+          sessionKey && sessionKeys.includes(sessionKey)
+            ? sessionKey
+            : sessionKeys[0];
+        selector.value = activeKey;
+        selectedSessionKey = activeKey;
+
+        // Listen for dropdown change
+        selector.onchange = () => {
+          selectedSessionKey = selector.value;
+          renderSessionData(userSessions[selector.value]);
+        };
+
+        renderSessionData(userSessions[activeKey]);
+      }
+
+      function clearSessionDetail() {
+        $("detail-balance").textContent = "—";
+        $("detail-time").textContent = "—";
+        $("detail-trash").textContent = "—";
+        $("detail-bento").textContent = "—";
+        $("detail-bento").className =
+          "inline-block font-body text-xs font-700 px-3 py-1 rounded-full bg-stone text-grass";
+        $("inventory-chips").innerHTML =
+          '<p class="text-grass text-sm">No inventory data.</p>';
+        $("transactions-tbody").innerHTML = "";
+        $("transactions-empty").classList.remove("hidden");
+        $("accuracy-summary").innerHTML = "";
+      }
+
+      function renderSessionData(session) {
+        if (!session) {
+          clearSessionDetail();
+          return;
+        }
+
+        // Summary
+        const s = session.session_summary || {};
+        $("detail-balance").textContent = formatMoney(s.final_balance || 0);
+        $("detail-time").textContent = formatTime(s.total_time_seconds || 0);
+        $("detail-trash").textContent = s.trash_disposed ?? "—";
+
+        if (s.is_bento_unlocked) {
+          $("detail-bento").textContent = "Yes";
+          $("detail-bento").className =
+            "inline-block font-body text-xs font-700 px-3 py-1 rounded-full bg-moss/20 text-moss";
+        } else {
+          $("detail-bento").textContent = "No";
+          $("detail-bento").className =
+            "inline-block font-body text-xs font-700 px-3 py-1 rounded-full bg-stone text-grass";
+        }
+
+        // Inventory chips
+        const inv = session.inventory_logs || {};
+        const itemLabels = {
+          apple_count: "Apple",
+          banana_count: "Banana",
+          bento_set_1_count: "Bento Set 1",
+          bento_set_2_count: "Bento Set 2",
+          blueberry_drink_count: "Blueberry Drink",
+          green_tea_count: "Green Tea",
+          orange_count: "Orange",
+          strawberry_count: "Strawberry",
+        };
+
+        let chipsHtml = "";
+        for (const [key, label] of Object.entries(itemLabels)) {
+          const count = inv[key] ?? 0;
+          const isZero = count === 0;
+          const bgClass = isZero ? "bg-stone text-grass" : "bg-cream text-loam";
+          chipsHtml += `<span class="${bgClass} rounded-full px-4 py-2 text-sm font-body font-600 transition-all duration-300">${label} <span class="font-heading font-700">${count}</span></span>`;
+        }
+        $("inventory-chips").innerHTML = chipsHtml;
+
+        // Transactions
+        const txns = session.transaction_history || {};
+        const txnKeys = Object.keys(txns).sort();
+        const tbody = $("transactions-tbody");
+        const emptyTxn = $("transactions-empty");
+
+        if (txnKeys.length === 0) {
+          tbody.innerHTML = "";
+          emptyTxn.classList.remove("hidden");
+          $("accuracy-summary").innerHTML = "";
+          return;
+        }
+        emptyTxn.classList.add("hidden");
+
+        let correctItems = 0;
+        let correctChange = 0;
+        let totalOrders = txnKeys.length;
+        let txnRows = "";
+
+        txnKeys.forEach((key, i) => {
+          const t = txns[key];
+          const itemCorrect = t.is_correct_item !== false;
+          const changeCorrect = t.is_change_correct !== false;
+          if (itemCorrect) correctItems++;
+          if (changeCorrect) correctChange++;
+
+          const hasError = !itemCorrect || !changeCorrect;
+          const rowBg = hasError
+            ? "bg-ember/10"
+            : i % 2 === 1
+              ? "bg-stone/20"
+              : "";
+
+          const checkIcon = `<svg class="w-5 h-5 text-moss inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>`;
+          const xIcon = `<svg class="w-5 h-5 text-ember inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>`;
+
+          txnRows += `
+          <tr class="border-b border-timber/30 ${rowBg} transition-all duration-300">
+            <td class="px-4 py-3 font-heading font-700 text-grass">${t.order_id || key}</td>
+            <td class="px-4 py-3">${t.requested_food || "—"} x${t.requested_food_qty ?? "?"}</td>
+            <td class="px-4 py-3">${t.requested_drink || "—"} x${t.requested_drink_qty ?? "?"}</td>
+            <td class="px-4 py-3">${formatMoney(t.order_cost || 0)}</td>
+            <td class="px-4 py-3">${formatMoney(t.amount_paid || 0)}</td>
+            <td class="px-4 py-3">${formatMoney(t.change_given || 0)}</td>
+            <td class="px-4 py-3 text-center">${itemCorrect ? checkIcon : xIcon}</td>
+            <td class="px-4 py-3 text-center">${changeCorrect ? checkIcon : xIcon}</td>
+          </tr>`;
+        });
+
+        tbody.innerHTML = txnRows;
+
+        // Accuracy summary
+        const fulfilledCorrectly = txnKeys.filter(
+          (k) =>
+            txns[k].is_correct_item !== false &&
+            txns[k].is_change_correct !== false,
+        ).length;
+        const changeAccuracy = Math.round((correctChange / totalOrders) * 100);
+        const accuracyColorClass =
+          changeAccuracy >= 80
+            ? "text-moss"
+            : changeAccuracy >= 50
+              ? "text-clay"
+              : "text-ember";
+
+        $("accuracy-summary").innerHTML = `
+        <p class="font-body text-sm"><span class="font-heading font-700 text-loam">${fulfilledCorrectly} / ${totalOrders}</span> orders fulfilled correctly</p>
+        <p class="font-body text-sm">Change accuracy: <span class="font-heading font-700 ${accuracyColorClass}">${changeAccuracy}%</span></p>
+      `;
+      }
+
+      // =====================================================
+      //  SECTION D: LEADERBOARD
+      // =====================================================
+      function renderLeaderboard() {
+        const list = $("leaderboard-list");
+        const emptyEl = $("leaderboard-empty");
+
+        // Build leaderboard: each player's best session score
+        const entries = [];
+        for (const uid of Object.keys(usersData)) {
+          const user = usersData[uid];
+          const userSessions = sessionsData[uid] || {};
+          let bestScore = -1;
+          let bestDate = null;
+
+          for (const sKey of Object.keys(userSessions)) {
+            const summary = userSessions[sKey]?.session_summary;
+            if (summary && (summary.final_balance || 0) > bestScore) {
+              bestScore = summary.final_balance || 0;
+              bestDate = summary.completed_at;
+            }
+          }
+
+          if (bestScore >= 0) {
+            entries.push({
+              uid,
+              username: user.username || "Unknown",
+              bestScore,
+              bestDate,
+            });
+          }
+        }
+
+        if (entries.length === 0) {
+          list.innerHTML = "";
+          emptyEl.classList.remove("hidden");
+          return;
+        }
+        emptyEl.classList.add("hidden");
+
+        // Sort descending by score
+        entries.sort((a, b) => b.bestScore - a.bestScore);
+
+        let html = "";
+        entries.forEach((entry, i) => {
+          const rank = i + 1;
+          const isTop3 = rank <= 3;
+          const accentBar = isTop3
+            ? '<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-moss rounded-full"></div>'
+            : "";
+          const rankSize = isTop3 ? "text-2xl" : "text-lg";
+          const nameSize = isTop3 ? "text-base font-700" : "text-sm font-600";
+          const scoreSize = isTop3 ? "text-xl" : "text-base";
+
+          html += `
+          <div class="relative flex items-center gap-4 px-6 py-4 hover:bg-sand/40 transition-all duration-300">
+            ${accentBar}
+            <span class="font-heading ${rankSize} font-800 text-clay w-10 text-center">${rank}</span>
+            <span class="font-body ${nameSize} text-loam flex-1">${entry.username}</span>
+            <span class="font-heading ${scoreSize} font-700 text-moss">${formatMoney(entry.bestScore)}</span>
+            <span class="font-body text-xs text-grass hidden sm:inline">${formatDate(entry.bestDate)}</span>
+          </div>`;
+        });
+
+        list.innerHTML = html;
+      }
+    </script>
+  </body>
+</html>

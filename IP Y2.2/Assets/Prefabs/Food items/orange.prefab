@@ -101,6 +101,7 @@ GameObject:
   - component: {fileID: -7888479565104786611}
   - component: {fileID: -3146017748866581175}
   - component: {fileID: 5555933825272859880}
+  - component: {fileID: 7127550586198183111}
   m_Layer: 0
   m_Name: orange
   m_TagString: Orange
@@ -136,7 +137,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3465960074703397733}
   serializedVersion: 5
-  m_Mass: 5
+  m_Mass: 30
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -237,7 +238,7 @@ MonoBehaviour:
   m_SnapToColliderVolume: 1
   m_ReinitializeDynamicAttachEverySingleGrab: 1
   m_AttachEaseInTime: 0.15
-  m_MovementType: 2
+  m_MovementType: 0
   m_PredictedVisualsTransform: {fileID: 0}
   m_VelocityDamping: 1
   m_VelocityScale: 1
@@ -255,7 +256,7 @@ MonoBehaviour:
   m_SmoothScale: 0
   m_SmoothScaleAmount: 8
   m_TightenScale: 0.1
-  m_ThrowOnDetach: 1
+  m_ThrowOnDetach: 0
   m_ThrowSmoothingDuration: 0.25
   m_ThrowSmoothingCurve:
     serializedVersion: 2
@@ -305,6 +306,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.01, y: 0.008, z: 0.01}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7127550586198183111
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3465960074703397733}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb1be773d75eb404c84e41a3ff5c6a3b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SocketKinematicFix
 --- !u!1 &3559983289416564338
 GameObject:
   m_ObjectHideFlags: 0
