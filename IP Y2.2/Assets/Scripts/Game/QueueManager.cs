@@ -14,9 +14,7 @@ public class QueueManager : MonoBehaviour
 
   private int[] studentTargetIndices;
   private bool hasOrdered = false;
-
-  private float movementCheckInterval = 0.02f;
-  private float lastMovementCheck = 0f;
+  private Animator[] studentAnimators;
 
   public static QueueManager Instance;
 
@@ -39,19 +37,17 @@ public class QueueManager : MonoBehaviour
     }
 
     studentTargetIndices = new int[students.Length];
+    studentAnimators = new Animator[students.Length];
     for (int i = 0; i < students.Length; i++)
     {
       studentTargetIndices[i] = i;
+      studentAnimators[i] = students[i].GetComponentInChildren<Animator>();
     }
   }
 
   private void Update()
   {
-    if (Time.time - lastMovementCheck >= movementCheckInterval)
-    {
-      HandleMovement();
-      lastMovementCheck = Time.time;
-    }
+    HandleMovement();
   }
 
   private void HandleMovement()
@@ -60,9 +56,14 @@ public class QueueManager : MonoBehaviour
     {
       Transform target = waypoints[studentTargetIndices[i]];
       Vector3 direction = target.position - students[i].transform.position;
+      direction.y = 0;
       float sqrDistance = direction.sqrMagnitude;
+      bool isMoving = sqrDistance > 0.01f;
 
-      if (sqrDistance > 0.01f) // 0.1² = 0.01
+      if (studentAnimators[i] != null)
+        studentAnimators[i].SetBool("isWalking", isMoving);
+
+      if (isMoving)
       {
         students[i].transform.position = Vector3.MoveTowards(
             students[i].transform.position,
@@ -78,7 +79,7 @@ public class QueueManager : MonoBehaviour
         );
       }
 
-      if (studentTargetIndices[i] == 0 && sqrDistance < 0.01f && !hasOrdered)
+      if (studentTargetIndices[i] == 0 && !isMoving && !hasOrdered)
       {
         if (trayValidator != null)
         {
