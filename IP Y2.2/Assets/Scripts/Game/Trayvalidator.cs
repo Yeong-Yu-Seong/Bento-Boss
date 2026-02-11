@@ -84,6 +84,16 @@ public class TrayValidator : MonoBehaviour
   private Dictionary<GameObject, Coroutine> pendingSnaps = new Dictionary<GameObject, Coroutine>();
   private HashSet<GameObject> snappedItems = new HashSet<GameObject>();
 
+  // Per-order accuracy tracking
+  private int correctFoodPlacements = 0;
+  private int wrongFoodPlacements = 0;
+  private bool wasChangeExact = true;
+
+  public bool WasFoodOrderCorrect => wrongFoodPlacements == 0;
+  public bool WasChangeCorrect => wasChangeExact;
+  public int CorrectFoodPlacements => correctFoodPlacements;
+  public int WrongFoodPlacements => wrongFoodPlacements;
+
   private Dictionary<Transform, GameObject> socketOccupancy = new Dictionary<Transform, GameObject>();
   private Dictionary<GameObject, Transform> itemToSocket = new Dictionary<GameObject, Transform>();
   private List<GameObject> collectedMoney = new List<GameObject>();
@@ -179,6 +189,9 @@ public class TrayValidator : MonoBehaviour
     physicalItemsOnTray.Clear();
     physicalItemsSet.Clear();
 
+    correctFoodPlacements = 0;
+    wrongFoodPlacements = 0;
+
     orderActive = true;
 
     if (orderProgressUI != null)
@@ -267,6 +280,11 @@ public class TrayValidator : MonoBehaviour
 
       bool isCorrect = IsCorrectItemForOrder(tag);
       PlayFeedback(isCorrect);
+
+      if (isCorrect)
+        correctFoodPlacements++;
+      else
+        wrongFoodPlacements++;
 
       if (isCorrect)
       {
@@ -677,6 +695,7 @@ public class TrayValidator : MonoBehaviour
     paymentPhase = true;
     requiredChange = changeAmount;
     collectedChange = 0f;
+    wasChangeExact = true;
     Debug.Log($"Payment phase started. Required change: ${requiredChange:F2}");
   }
 
@@ -693,6 +712,7 @@ public class TrayValidator : MonoBehaviour
       hasGivenChange = true;
 
       bool isOverpaid = collectedChange > requiredChange + 0.01f;
+      wasChangeExact = !isOverpaid;
       PlayFeedback(!isOverpaid);
 
       if (PaymentHandler.Instance != null)

@@ -50,6 +50,10 @@ namespace BentoBoss.FirebaseManagers
     public float final_balance;
     public bool is_bento_unlocked;
     public int trash_disposed;
+    public int food_correct_count;
+    public int food_wrong_count;
+    public int change_correct_count;
+    public int change_wrong_count;
     public string completed_at;
 
     /// <summary>
@@ -63,6 +67,10 @@ namespace BentoBoss.FirebaseManagers
         { "final_balance", (float)Math.Round(final_balance, 2) },
         { "is_bento_unlocked", is_bento_unlocked },
         { "trash_disposed", trash_disposed },
+        { "food_correct_count", food_correct_count },
+        { "food_wrong_count", food_wrong_count },
+        { "change_correct_count", change_correct_count },
+        { "change_wrong_count", change_wrong_count },
         { "completed_at", completed_at }
       };
     }

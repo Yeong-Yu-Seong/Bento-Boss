@@ -214,16 +214,19 @@ public class PaymentHandler : MonoBehaviour
       string foodName = (foodID >= 0 && foodID < foodTagNames.Length) ? foodTagNames[foodID] : "Unknown";
       string drinkName = (drinkID >= 0 && drinkID < drinkTagNames.Length) ? drinkTagNames[drinkID] : "Unknown";
 
+      bool foodCorrect = TrayValidator.Instance != null && TrayValidator.Instance.WasFoodOrderCorrect;
+      bool changeCorrect = TrayValidator.Instance != null && TrayValidator.Instance.WasChangeCorrect;
+
       SessionLogger.Instance.LogTransaction(
           foodName,
           orderBubbleController.requiredFoodQuantity,
           drinkName,
           orderBubbleController.requiredDrinkQuantity,
-          true,
+          foodCorrect,
           currentOrderTotal,
           customerPayment,
-          requiredChange,
-          true
+          givenChangeAmount,
+          changeCorrect
       );
     }
 

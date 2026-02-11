@@ -29,6 +29,12 @@ public class SessionLogger : MonoBehaviour
   private Dictionary<string, int> _lastInventoryCounts = new Dictionary<string, int>();
   private int _lastTrashCount = -1;
 
+  // Session-level accuracy counters
+  private int _foodCorrectCount = 0;
+  private int _foodWrongCount = 0;
+  private int _changeCorrectCount = 0;
+  private int _changeWrongCount = 0;
+
   // Maps Unity tags to Firebase inventory_logs field names
   private static readonly Dictionary<string, string> TagToFirebaseKey = new Dictionary<string, string>
   {
@@ -71,6 +77,10 @@ public class SessionLogger : MonoBehaviour
         { "final_balance", 0f },
         { "is_bento_unlocked", false },
         { "trash_disposed", 0 },
+        { "food_correct_count", 0 },
+        { "food_wrong_count", 0 },
+        { "change_correct_count", 0 },
+        { "change_wrong_count", 0 },
         { "completed_at", "" }
       };
       DatabaseManager.Instance.PushSummaryFieldsLive(_userId, _sessionTimestamp, initialFields);
@@ -120,12 +130,18 @@ public class SessionLogger : MonoBehaviour
     };
 
     _transactions.Add(entry);
-    Debug.Log($"[SessionLogger] Transaction logged: {entry.order_id} - {food} x{foodQty}, {drink} x{drinkQty}, ${orderCost:F2}");
+
+    // Update session-level accuracy counters
+    if (correctItem) _foodCorrectCount++; else _foodWrongCount++;
+    if (changeCorrect) _changeCorrectCount++; else _changeWrongCount++;
+
+    Debug.Log($"[SessionLogger] Transaction logged: {entry.order_id} - {food} x{foodQty}, {drink} x{drinkQty}, ${orderCost:F2} | Food correct: {correctItem}, Change correct: {changeCorrect}");
 
     // Push to Firebase immediately
     if (IsReady)
     {
       DatabaseManager.Instance.PushTransactionLive(_userId, _sessionTimestamp, entry.order_id, entry.ToDictionary());
+      PushAccuracyNow();
     }
   }
 
@@ -181,6 +197,24 @@ public class SessionLogger : MonoBehaviour
   }
 
   /// <summary>
+  /// Push accuracy counters to Firebase in real-time.
+  /// Called after each transaction is logged.
+  /// </summary>
+  private void PushAccuracyNow()
+  {
+    if (!IsReady) return;
+
+    var fields = new Dictionary<string, object>
+    {
+      { "food_correct_count", _foodCorrectCount },
+      { "food_wrong_count", _foodWrongCount },
+      { "change_correct_count", _changeCorrectCount },
+      { "change_wrong_count", _changeWrongCount }
+    };
+    DatabaseManager.Instance.PushSummaryFieldsLive(_userId, _sessionTimestamp, fields);
+  }
+
+  /// <summary>
   /// End the session and push final complete snapshot to Firebase.
   /// Called from EarningsTracker.OnGoalReached().
   /// </summary>
@@ -220,6 +254,10 @@ public class SessionLogger : MonoBehaviour
         final_balance = finalBalance,
         is_bento_unlocked = bentoUnlocked,
         trash_disposed = trashCount,
+        food_correct_count = _foodCorrectCount,
+        food_wrong_count = _foodWrongCount,
+        change_correct_count = _changeCorrectCount,
+        change_wrong_count = _changeWrongCount,
         completed_at = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
       },
       inventory_logs = inventoryLog,
