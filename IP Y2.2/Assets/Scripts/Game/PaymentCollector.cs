@@ -33,6 +33,11 @@ public class PaymentCollector : MonoBehaviour
         PaymentHandler.Instance.OnPaymentReceived(collectedAmount);
       }
 
+      if (TrayValidator.Instance != null)
+      {
+        TrayValidator.Instance.OnPaymentCollected();
+      }
+
       Destroy(other.gameObject);
       collectedAmount = 0f;
       gameObject.SetActive(false);

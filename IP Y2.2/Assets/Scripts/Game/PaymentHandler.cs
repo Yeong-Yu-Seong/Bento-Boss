@@ -21,6 +21,7 @@ public class PaymentHandler : MonoBehaviour
   private float requiredChange;
   private bool paymentReceived = false;
   private bool changeGiven = false;
+  private float givenChangeAmount = 0f;
   private GameObject spawnedPaymentObject;
 
   public static PaymentHandler Instance;
@@ -154,6 +155,7 @@ public class PaymentHandler : MonoBehaviour
 
       Debug.Log("✓ Correct change given!");
       changeGiven = true;
+      givenChangeAmount = givenAmount;
 
       if (orderProgressUI != null)
       {
@@ -189,7 +191,9 @@ public class PaymentHandler : MonoBehaviour
     {
       if (EarningsTracker.Instance != null)
       {
-        EarningsTracker.Instance.AddProfit(currentOrderTotal);
+        float overpayment = Mathf.Max(0f, givenChangeAmount - requiredChange);
+        float actualProfit = currentOrderTotal - overpayment;
+        EarningsTracker.Instance.AddProfit(actualProfit);
       }
 
       StartCoroutine(CompleteTransaction());

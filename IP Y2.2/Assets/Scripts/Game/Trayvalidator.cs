@@ -75,6 +75,9 @@ public class TrayValidator : MonoBehaviour
   private float requiredChange = 0f;
   private float collectedChange = 0f;
 
+  private bool hasGivenChange = false;
+  private bool hasCollectedPayment = false;
+
   private readonly string[] foodTags = { "Apple", "Banana", "Orange", "Strawberry", "Bento1", "Bento2" };
   private readonly string[] drinkTags = { "Blueberry", "GreenTea" };
 
@@ -124,6 +127,8 @@ public class TrayValidator : MonoBehaviour
     collectedMoneySet.Clear();
     collectedChange = 0f;
     paymentPhase = false;
+    hasGivenChange = false;
+    hasCollectedPayment = false;
   }
 
   private Rigidbody GetCachedRigidbody(GameObject obj)
@@ -239,15 +244,6 @@ public class TrayValidator : MonoBehaviour
           collectedMoneySet.Add(itemObj);
           collectedChange += moneyValue;
 
-          Rigidbody rb = GetCachedRigidbody(itemObj);
-          if (rb != null)
-          {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-            rb.useGravity = false;
-            rb.isKinematic = true;
-          }
-
           Debug.Log($"Change collected: ${moneyValue:F2}, Total: ${collectedChange:F2}");
           ValidateChange();
         }
@@ -323,8 +319,11 @@ public class TrayValidator : MonoBehaviour
       XRGrabInteractable grab = itemObj.GetComponent<XRGrabInteractable>();
       bool isBeingHeld = grab != null && grab.isSelected;
 
-      // Money is collected and not held — ignore the exit, it's settled on the tray
-      if (!isBeingHeld)
+      Rigidbody moneyRb = GetCachedRigidbody(itemObj);
+      bool isSettled = moneyRb != null && moneyRb.isKinematic;
+
+      // If settled on tray and not being held, ignore the exit
+      if (!isBeingHeld && isSettled)
       {
         return;
       }
@@ -337,7 +336,6 @@ public class TrayValidator : MonoBehaviour
         collectedMoneySet.Remove(itemObj);
         collectedChange -= moneyValue;
 
-        Rigidbody moneyRb = GetCachedRigidbody(itemObj);
         if (moneyRb != null)
         {
           moneyRb.isKinematic = false;
@@ -689,40 +687,34 @@ public class TrayValidator : MonoBehaviour
 
   private void ValidateChange()
   {
-    float difference = Mathf.Abs(collectedChange - requiredChange);
-
-    if (difference < 0.01f)
+    if (collectedChange >= requiredChange - 0.01f)
     {
       paymentPhase = false;
+      hasGivenChange = true;
+
+      bool isOverpaid = collectedChange > requiredChange + 0.01f;
+      PlayFeedback(!isOverpaid);
+
       if (PaymentHandler.Instance != null)
       {
         PaymentHandler.Instance.OnChangeValidated(true, collectedChange);
       }
 
-      StartCoroutine(DeleteMoneyAfterDelay());
+      CheckTransactionComplete();
     }
-    else if (collectedChange > requiredChange + 0.01f)
-    {
-      if (PaymentHandler.Instance != null)
-      {
-        PaymentHandler.Instance.OnChangeValidated(false, collectedChange);
-      }
+  }
 
-      foreach (GameObject money in collectedMoney)
-      {
-        if (money != null)
-        {
-          Rigidbody rb = GetCachedRigidbody(money);
-          if (rb != null)
-          {
-            rb.isKinematic = false;
-            rb.useGravity = true;
-          }
-        }
-      }
-      collectedMoney.Clear();
-      collectedMoneySet.Clear();
-      collectedChange = 0f;
+  public void OnPaymentCollected()
+  {
+    hasCollectedPayment = true;
+    CheckTransactionComplete();
+  }
+
+  private void CheckTransactionComplete()
+  {
+    if (hasGivenChange && hasCollectedPayment)
+    {
+      StartCoroutine(DeleteMoneyAfterDelay());
     }
   }
 
