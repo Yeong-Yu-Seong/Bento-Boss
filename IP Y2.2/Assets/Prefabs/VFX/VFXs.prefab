@@ -181,10 +181,6 @@ PrefabInstance:
       value: 512
       objectReference: {fileID: 0}
     - target: {fileID: 8753781467940129743, guid: 19499207a81eb474b9237a4e7312cae3, type: 3}
-      propertyPath: EmissionModule.rateOverTime.scalar
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: 8753781467940129743, guid: 19499207a81eb474b9237a4e7312cae3, type: 3}
       propertyPath: CollisionModule.collidesWith.m_Bits
       value: 49152
       objectReference: {fileID: 0}

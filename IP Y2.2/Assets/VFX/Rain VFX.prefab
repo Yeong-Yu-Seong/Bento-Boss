@@ -5235,7 +5235,7 @@ ParticleSystem:
     startSizeY:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 7.9
+      scalar: 10
       minScalar: 1
       maxCurve:
         serializedVersion: 2
@@ -5499,7 +5499,7 @@ ParticleSystem:
         m_RotationOrder: 4
     randomizeRotationDirection: 0
     gravitySource: 0
-    maxNumParticles: 1000
+    maxNumParticles: 3000
     customEmitterVelocity: {x: 0, y: 0, z: 0}
     size3D: 1
     rotation3D: 0
@@ -6390,7 +6390,7 @@ ParticleSystem:
     x:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 16.18
+      scalar: 20
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -6443,7 +6443,7 @@ ParticleSystem:
     y:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 27.95
+      scalar: 40
       minScalar: 0
       maxCurve:
         serializedVersion: 2

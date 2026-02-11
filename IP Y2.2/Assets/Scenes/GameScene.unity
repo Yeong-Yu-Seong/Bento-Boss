@@ -7259,6 +7259,11 @@ MonoBehaviour:
   waitTime: 1.5
   stuckTimeout: 2
   personalSpace: 1.5
+  intelligenceSamples: 8
+  densityScanRadius: 5
+  studentLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!195 &106309787
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -14988,6 +14993,11 @@ MonoBehaviour:
   waitTime: 1.5
   stuckTimeout: 2
   personalSpace: 1.5
+  intelligenceSamples: 8
+  densityScanRadius: 5
+  studentLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!195 &211586551
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -15410,6 +15420,11 @@ MonoBehaviour:
   waitTime: 1.5
   stuckTimeout: 2
   personalSpace: 1.5
+  intelligenceSamples: 8
+  densityScanRadius: 5
+  studentLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!195 &216397270
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -18475,6 +18490,11 @@ MonoBehaviour:
   waitTime: 1.5
   stuckTimeout: 2
   personalSpace: 1.5
+  intelligenceSamples: 8
+  densityScanRadius: 5
+  studentLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!195 &259492062
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -22013,6 +22033,11 @@ MonoBehaviour:
   waitTime: 1.5
   stuckTimeout: 2
   personalSpace: 1.5
+  intelligenceSamples: 8
+  densityScanRadius: 5
+  studentLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!195 &320852364
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -33859,6 +33884,11 @@ MonoBehaviour:
   waitTime: 1.5
   stuckTimeout: 2
   personalSpace: 1.5
+  intelligenceSamples: 8
+  densityScanRadius: 5
+  studentLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!195 &540642048
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -34425,6 +34455,11 @@ MonoBehaviour:
   waitTime: 1.5
   stuckTimeout: 2
   personalSpace: 1.5
+  intelligenceSamples: 8
+  densityScanRadius: 5
+  studentLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!195 &545062599
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -45292,6 +45327,11 @@ MonoBehaviour:
   waitTime: 1.5
   stuckTimeout: 2
   personalSpace: 1.5
+  intelligenceSamples: 8
+  densityScanRadius: 5
+  studentLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!195 &680047717
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -49753,6 +49793,11 @@ MonoBehaviour:
   waitTime: 1.5
   stuckTimeout: 2
   personalSpace: 1.5
+  intelligenceSamples: 8
+  densityScanRadius: 5
+  studentLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!195 &754021668
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -62434,6 +62479,11 @@ MonoBehaviour:
   waitTime: 1.5
   stuckTimeout: 2
   personalSpace: 1.5
+  intelligenceSamples: 8
+  densityScanRadius: 5
+  studentLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!195 &984866103
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -70921,6 +70971,11 @@ MonoBehaviour:
   waitTime: 1.5
   stuckTimeout: 2
   personalSpace: 1.5
+  intelligenceSamples: 8
+  densityScanRadius: 5
+  studentLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!195 &1113911232
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -81165,6 +81220,11 @@ MonoBehaviour:
   waitTime: 1.5
   stuckTimeout: 2
   personalSpace: 1.5
+  intelligenceSamples: 8
+  densityScanRadius: 5
+  studentLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!195 &1299490759
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -89539,6 +89599,11 @@ MonoBehaviour:
   waitTime: 1.5
   stuckTimeout: 2
   personalSpace: 1.5
+  intelligenceSamples: 8
+  densityScanRadius: 5
+  studentLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!195 &1429597998
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -99700,6 +99765,11 @@ MonoBehaviour:
   waitTime: 1.5
   stuckTimeout: 2
   personalSpace: 1.5
+  intelligenceSamples: 8
+  densityScanRadius: 5
+  studentLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!195 &1611309153
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -100108,6 +100178,11 @@ MonoBehaviour:
   waitTime: 1.5
   stuckTimeout: 2
   personalSpace: 1.5
+  intelligenceSamples: 8
+  densityScanRadius: 5
+  studentLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!195 &1618739366
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -104439,6 +104514,11 @@ MonoBehaviour:
   waitTime: 1.5
   stuckTimeout: 2
   personalSpace: 1.5
+  intelligenceSamples: 8
+  densityScanRadius: 5
+  studentLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!195 &1681183279
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -124328,6 +124408,11 @@ MonoBehaviour:
   waitTime: 1.5
   stuckTimeout: 2
   personalSpace: 1.5
+  intelligenceSamples: 8
+  densityScanRadius: 5
+  studentLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!195 &1975612923
 NavMeshAgent:
   m_ObjectHideFlags: 0
