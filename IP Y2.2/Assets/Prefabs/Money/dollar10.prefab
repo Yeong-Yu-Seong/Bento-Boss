@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: 5955406806382455096}
   - component: {fileID: 7006723422551875993}
   - component: {fileID: 1783921214367426593}
-  - component: {fileID: 1089319501000053798}
   m_Layer: 0
   m_Name: dollar10
   m_TagString: Money_10Dollar
@@ -164,7 +163,19 @@ MonoBehaviour:
       m_Calls: []
   m_LastSelectExited:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 5955406806382455096}
+        m_TargetAssemblyTypeName: UnityEngine.Rigidbody, UnityEngine
+        m_MethodName: set_isKinematic
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_SelectEntered:
     m_PersistentCalls:
       m_Calls: []
@@ -192,8 +203,6 @@ MonoBehaviour:
   m_StartingHoverFilters: []
   m_StartingSelectFilters: []
   m_StartingInteractionStrengthFilters: []
-  m_AutoFindParentInteractableInHierarchy: 0
-  m_ParentInteractableObject: {fileID: 0}
   m_AttachTransform: {fileID: 0}
   m_SecondaryAttachTransform: {fileID: 0}
   m_UseDynamicAttach: 0
@@ -239,7 +248,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   m_ThrowVelocityScale: 1.5
   m_ThrowAngularVelocityScale: 1
-  m_ForceGravityOnDetach: 0
+  m_ForceGravityOnDetach: 1
   m_RetainTransformParent: 1
   m_StartingSingleGrabTransformers: []
   m_StartingMultipleGrabTransformers: []
@@ -270,15 +279,3 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.0007500004, y: 0.000010000466, z: 0.0015000008}
   m_Center: {x: 3.3469402e-10, y: 3.3242029e-10, z: -4.3655743e-10}
---- !u!114 &1089319501000053798
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 813930614212402358}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bb1be773d75eb404c84e41a3ff5c6a3b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SocketKinematicFix

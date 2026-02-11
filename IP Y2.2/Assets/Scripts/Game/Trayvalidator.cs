@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -44,6 +45,20 @@ public class TrayValidator : MonoBehaviour
   [Header("Snap Settings")]
   public float snapDelay = 0.3f;
   public float snapSpeed = 8f;
+
+  [Header("Feedback VFX/SFX")]
+  [Tooltip("AudioSource on the tray for playing feedback SFX")]
+  [SerializeField] private AudioSource feedbackAudioSource;
+  [Tooltip("SFX played when a correct item is placed")]
+  [SerializeField] private AudioClip successSFX;
+  [Tooltip("SFX played when a wrong item is placed")]
+  [SerializeField] private AudioClip failSFX;
+  [Tooltip("Particle system played when a correct item is placed")]
+  [SerializeField] private ParticleSystem successVFX;
+  [Tooltip("Particle system played when a wrong item is placed")]
+  [SerializeField] private ParticleSystem failVFX;
+  [Tooltip("How long the VFX plays before being stopped (seconds)")]
+  [SerializeField] private float feedbackDuration = 2f;
 
   private Dictionary<string, int> itemsOnTray = new Dictionary<string, int>();
   private List<GameObject> physicalItemsOnTray = new List<GameObject>();
@@ -224,6 +239,15 @@ public class TrayValidator : MonoBehaviour
           collectedMoneySet.Add(itemObj);
           collectedChange += moneyValue;
 
+          Rigidbody rb = GetCachedRigidbody(itemObj);
+          if (rb != null)
+          {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.useGravity = false;
+            rb.isKinematic = true;
+          }
+
           Debug.Log($"Change collected: ${moneyValue:F2}, Total: ${collectedChange:F2}");
           ValidateChange();
         }
@@ -245,7 +269,10 @@ public class TrayValidator : MonoBehaviour
 
       Debug.Log($"Added {tag} ({itemsOnTray[tag]}/{(tag == requiredFoodTag ? requiredFoodQuantity : requiredDrinkQuantity)})");
 
-      if (IsCorrectItemForOrder(tag))
+      bool isCorrect = IsCorrectItemForOrder(tag);
+      PlayFeedback(isCorrect);
+
+      if (isCorrect)
       {
         Transform targetSocket = GetSocketForItem(tag, itemObj);
         if (targetSocket != null)
@@ -290,9 +317,19 @@ public class TrayValidator : MonoBehaviour
     if (other.gameObject != itemObj) return;
     string tag = itemObj.tag;
 
-    // Handle money removal during payment phase
+    // Handle money during payment phase
     if (paymentPhase && collectedMoneySet.Contains(itemObj))
     {
+      XRGrabInteractable grab = itemObj.GetComponent<XRGrabInteractable>();
+      bool isBeingHeld = grab != null && grab.isSelected;
+
+      // Money is collected and not held — ignore the exit, it's settled on the tray
+      if (!isBeingHeld)
+      {
+        return;
+      }
+
+      // Player is intentionally removing it — proceed with removal
       float moneyValue = GetMoneyValue(tag);
       if (moneyValue > 0f)
       {
@@ -303,7 +340,8 @@ public class TrayValidator : MonoBehaviour
         Rigidbody moneyRb = GetCachedRigidbody(itemObj);
         if (moneyRb != null)
         {
-          StartCoroutine(ResetMoneyPhysics(moneyRb));
+          moneyRb.isKinematic = false;
+          moneyRb.useGravity = true;
         }
 
         Debug.Log($"Money removed: ${moneyValue:F2}, Remaining: ${collectedChange:F2}");
@@ -313,10 +351,23 @@ public class TrayValidator : MonoBehaviour
 
     if (physicalItemsSet.Contains(itemObj))
     {
+      // If we are currently snapping this item and the user isn't holding it,
+      // ignore the exit — the item is mid-flight and will settle at the socket.
+      XRGrabInteractable grab = itemObj.GetComponent<XRGrabInteractable>();
+      bool isBeingHeld = grab != null && grab.isSelected;
+
+      if (pendingSnaps.ContainsKey(itemObj) && !isBeingHeld)
+      {
+        return;
+      }
+
       if (itemToSocket.TryGetValue(itemObj, out Transform assignedSocket))
       {
         Rigidbody checkRb = GetCachedRigidbody(itemObj);
-        if (checkRb != null && checkRb.isKinematic && Vector3.Distance(itemObj.transform.position, assignedSocket.position) < 0.2f)
+
+        if (checkRb != null && checkRb.isKinematic &&
+            Vector3.Distance(itemObj.transform.position, assignedSocket.position) < 0.2f
+            && !isBeingHeld)
         {
           return;
         }
@@ -360,6 +411,33 @@ public class TrayValidator : MonoBehaviour
       Debug.Log($"Removed {tag} (remaining: {(itemsOnTray.TryGetValue(tag, out int rem) ? rem : 0)})");
 
       ValidateOrder();
+    }
+  }
+
+  private void PlayFeedback(bool success)
+  {
+    AudioClip clip = success ? successSFX : failSFX;
+    ParticleSystem vfx = success ? successVFX : failVFX;
+
+    if (clip != null && feedbackAudioSource != null)
+    {
+      feedbackAudioSource.PlayOneShot(clip);
+    }
+
+    if (vfx != null)
+    {
+      vfx.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+      vfx.Play();
+      StartCoroutine(StopVFXAfterDuration(vfx, feedbackDuration));
+    }
+  }
+
+  private IEnumerator StopVFXAfterDuration(ParticleSystem vfx, float duration)
+  {
+    yield return new WaitForSeconds(duration);
+    if (vfx != null)
+    {
+      vfx.Stop(true, ParticleSystemStopBehavior.StopEmitting);
     }
   }
 
