@@ -9,11 +9,10 @@ public static class ScoreCalculator
 {
   private const float FOOD_MAX = 500f;
   private const float CHANGE_MAX = 500f;
-  private const float SPEED_MAX = 200f;
+  private const float SPEED_MAX = 300f;
   private const float SPEED_FULL_THRESHOLD = 420f;
   private const float SPEED_ZERO_THRESHOLD = 900f;
   private const float WASTE_PENALTY_PER_ITEM = 25f;
-  private const float SPEED_MAX = 300f;
 
   public struct ScoreResult
   {
