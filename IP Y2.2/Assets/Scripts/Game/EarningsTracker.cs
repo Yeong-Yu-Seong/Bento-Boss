@@ -25,7 +25,8 @@ public class EarningsTracker : MonoBehaviour
   [SerializeField] private Color defaultColor = Color.yellow;
   [SerializeField] private Color goalReachedColor = Color.green;
 
-  private float _currentProfit;
+  [Header("Current Balance")]
+  [SerializeField] private float _currentProfit;
   public float CurrentProfit => _currentProfit;
 
   private void Awake()
@@ -54,6 +55,29 @@ public class EarningsTracker : MonoBehaviour
     direction.y = 0;
     transform.rotation = Quaternion.LookRotation(direction);
   }
+
+#if UNITY_EDITOR
+  private float _lastValidatedProfit = -1f;
+
+  private void OnValidate()
+  {
+    if (!Application.isPlaying) return;
+    if (Mathf.Approximately(_currentProfit, _lastValidatedProfit)) return;
+    _lastValidatedProfit = _currentProfit;
+
+    // Defer to next frame — OnValidate can't call SendMessage
+    UnityEditor.EditorApplication.delayCall += () =>
+    {
+      if (this == null) return;
+      UpdateUI();
+      if (SessionLogger.Instance != null) SessionLogger.Instance.PushBalanceNow(_currentProfit);
+      if (_currentProfit >= dailyGoal)
+      {
+        OnGoalReached();
+      }
+    };
+  }
+#endif
 
   private void InitializeUI()
   {

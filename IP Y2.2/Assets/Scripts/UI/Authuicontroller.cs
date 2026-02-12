@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -6,6 +7,10 @@ using UnityEngine.SceneManagement;
 
 public class AuthUIController : MonoBehaviour
 {
+  public static AuthUIController Instance { get; private set; }
+
+  private Canvas _canvas;
+
   [Header("Panels")]
   [SerializeField] private GameObject loginPanel;
   [SerializeField] private GameObject signUpPanel;
@@ -58,11 +63,41 @@ public class AuthUIController : MonoBehaviour
   [SerializeField] private GameObject settingsPanel;
   [SerializeField] private Button settingsBackButton;
 
+  [Header("End Screen Panel")]
+  [SerializeField] private GameObject endScreenPanel;
+  [SerializeField] private TextMeshProUGUI dateText;
+  [SerializeField] private TextMeshProUGUI gradeText;
+  [SerializeField] private TextMeshProUGUI scoreText;
+  [SerializeField] private TextMeshProUGUI earningsText;
+  [SerializeField] private TextMeshProUGUI statsText;
+  [SerializeField] private Button playAgainButton;
+  [SerializeField] private Button mainMenuButtonEndScreen;
+
   [Header("Settings")]
   [SerializeField] private string gameSceneName = "GameScene";
 
+  // End screen data storage (survives scene transitions via DontDestroyOnLoad)
+  private bool _hasEndScreenData = false;
+  private int _finalScore;
+  private string _grade;
+  private float _totalEarnings;
+  private float _totalTimeSeconds;
+  private int _totalOrders;
+  private int _trashDisposed;
+  private string _completedAt;
+
   void Awake()
   {
+    if (Instance != null && Instance != this)
+    {
+      Destroy(gameObject);
+      return;
+    }
+    Instance = this;
+    DontDestroyOnLoad(gameObject);
+
+    _canvas = GetComponentInChildren<Canvas>();
+
     // Check critical assignments
     if (loginPanel == null) Debug.LogError("[AuthUI] LoginPanel not assigned!");
     if (signUpPanel == null) Debug.LogError("[AuthUI] SignUpPanel not assigned!");
@@ -72,6 +107,16 @@ public class AuthUIController : MonoBehaviour
     if (handbookPanel == null) Debug.LogWarning("[AuthUI] HandbookPanel not assigned!");
     if (settingsPanel == null) Debug.LogWarning("[AuthUI] SettingsPanel not assigned!");
     if (creditPanel == null) Debug.LogWarning("[AuthUI] CreditPanel not assigned!");
+  }
+
+  void OnEnable()
+  {
+    SceneManager.sceneLoaded += OnSceneLoaded;
+  }
+
+  void OnDisable()
+  {
+    SceneManager.sceneLoaded -= OnSceneLoaded;
   }
 
   void Start()
@@ -145,6 +190,7 @@ public class AuthUIController : MonoBehaviour
     if (handbookPanel != null) handbookPanel.SetActive(false);
     if (settingsPanel != null) settingsPanel.SetActive(false);
     if (creditPanel != null) creditPanel.SetActive(false);
+    if (endScreenPanel != null) endScreenPanel.SetActive(false);
   }
 
   void ShowLoginPanel()
@@ -181,6 +227,7 @@ public class AuthUIController : MonoBehaviour
   void ShowMenuPanel()
   {
     Debug.Log("[AuthUI] Showing Menu Panel");
+    if (_canvas != null) _canvas.enabled = true;
     HideAllPanels();
     if (menuPanel != null) menuPanel.SetActive(true);
   }
@@ -319,8 +366,95 @@ public class AuthUIController : MonoBehaviour
     }
   }
 
+  void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+  {
+    Debug.Log($"[AuthUI] Scene loaded: {scene.name}, Has end data: {_hasEndScreenData}");
+
+    if (scene.name == "MenuScene")
+    {
+      if (_canvas != null && !_canvas.enabled)
+      {
+        _canvas.enabled = true;
+        Debug.Log("[AuthUI] Canvas re-enabled");
+      }
+
+      if (_hasEndScreenData)
+      {
+        Debug.Log("[AuthUI] Showing end screen");
+        ShowEndScreen();
+      }
+    }
+  }
+
+  public void SetEndScreenData(int score, string grade, float earnings, float timeSeconds, int orders, int waste, string completedAt)
+  {
+    _finalScore = score;
+    _grade = grade;
+    _totalEarnings = earnings;
+    _totalTimeSeconds = timeSeconds;
+    _totalOrders = orders;
+    _trashDisposed = waste;
+    _completedAt = completedAt;
+    _hasEndScreenData = true;
+  }
+
+  void ShowEndScreen()
+  {
+    // Re-enable Canvas (was hidden during GameScene)
+    if (_canvas != null) _canvas.enabled = true;
+
+    HideAllPanels();
+    if (endScreenPanel != null) endScreenPanel.SetActive(true);
+
+    if (dateText != null)
+    {
+      if (DateTime.TryParse(_completedAt, out DateTime parsed))
+        dateText.text = parsed.ToLocalTime().ToString("MMM dd, yyyy - h:mm tt");
+      else
+        dateText.text = _completedAt;
+    }
+    if (gradeText != null) gradeText.text = $"GRADE: {_grade}";
+    if (scoreText != null) scoreText.text = $"{_finalScore} pts";
+    if (earningsText != null) earningsText.text = $"${_totalEarnings:F2}";
+
+    int minutes = Mathf.FloorToInt(_totalTimeSeconds / 60);
+    int seconds = Mathf.FloorToInt(_totalTimeSeconds % 60);
+    if (statsText != null)
+    {
+      statsText.text = $"Time: {minutes}m {seconds}s    Orders: {_totalOrders}\nWaste: {_trashDisposed}";
+    }
+
+    if (playAgainButton != null)
+    {
+      playAgainButton.onClick.RemoveAllListeners();
+      playAgainButton.onClick.AddListener(OnPlayAgainClicked);
+    }
+
+    if (mainMenuButtonEndScreen != null)
+    {
+      mainMenuButtonEndScreen.onClick.RemoveAllListeners();
+      mainMenuButtonEndScreen.onClick.AddListener(OnMainMenuFromEndScreenClicked);
+    }
+
+    Debug.Log($"[AuthUI] Showing End Screen — Score: {_finalScore} ({_grade})");
+  }
+
+  void OnPlayAgainClicked()
+  {
+    _hasEndScreenData = false;
+    OnStartGameClicked();
+  }
+
+  void OnMainMenuFromEndScreenClicked()
+  {
+    _hasEndScreenData = false;
+    ShowMenuPanel();
+  }
+
   void OnStartGameClicked()
   {
+    // Hide Canvas during gameplay so it doesn't render over GameScene
+    if (_canvas != null) _canvas.enabled = false;
     SceneManager.LoadScene(gameSceneName);
   }
 
@@ -453,5 +587,7 @@ public class AuthUIController : MonoBehaviour
     if (handbookBackButton != null) handbookBackButton.onClick.RemoveAllListeners();
     if (creditBackButton != null) creditBackButton.onClick.RemoveAllListeners();
     if (settingsBackButton != null) settingsBackButton.onClick.RemoveAllListeners();
+    if (playAgainButton != null) playAgainButton.onClick.RemoveAllListeners();
+    if (mainMenuButtonEndScreen != null) mainMenuButtonEndScreen.onClick.RemoveAllListeners();
   }
 }

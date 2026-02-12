@@ -1,5 +1,7 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using BentoBoss.FirebaseManagers;
 
@@ -218,7 +220,7 @@ public class SessionLogger : MonoBehaviour
   /// End the session and push final complete snapshot to Firebase.
   /// Called from EarningsTracker.OnGoalReached().
   /// </summary>
-  public async void EndSession()
+  public void EndSession()
   {
     if (_sessionEnded) return;
     _sessionEnded = true;
@@ -246,6 +248,12 @@ public class SessionLogger : MonoBehaviour
       if (counts.TryGetValue("GreenTea", out int greenTea)) inventoryLog.green_tea_count = greenTea;
     }
 
+    // Calculate final score
+    var scoreResult = ScoreCalculator.Calculate(
+        _foodCorrectCount, _foodWrongCount,
+        _changeCorrectCount, _changeWrongCount,
+        elapsed, trashCount);
+
     var sessionData = new FirebaseSessionData
     {
       session_summary = new SessionSummary
@@ -258,29 +266,78 @@ public class SessionLogger : MonoBehaviour
         food_wrong_count = _foodWrongCount,
         change_correct_count = _changeCorrectCount,
         change_wrong_count = _changeWrongCount,
+        final_score = scoreResult.totalScore,
+        grade = scoreResult.grade,
         completed_at = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
       },
       inventory_logs = inventoryLog,
       transaction_history = _transactions
     };
 
-    // Get current user ID
-    string userId = !string.IsNullOrEmpty(_userId) ? _userId : AuthManager.Instance?.CurrentUser?.UserId;
-    if (string.IsNullOrEmpty(userId))
-    {
-      Debug.LogError("[SessionLogger] No authenticated user — session not saved");
-      return;
-    }
+    Debug.Log($"[SessionLogger] Session ending — {_transactions.Count} transactions, {elapsed:F1}s, ${finalBalance:F2}, Score: {scoreResult.totalScore} ({scoreResult.grade})");
 
-    var result = await DatabaseManager.Instance.SaveSessionData(userId, _sessionTimestamp, sessionData);
-
-    if (result.Success)
+    // CRITICAL: Pass data to AuthUIController BEFORE scene load
+    if (AuthUIController.Instance != null)
     {
-      Debug.Log($"[SessionLogger] Session saved — {_transactions.Count} transactions, {elapsed:F1}s, ${finalBalance:F2}");
+      AuthUIController.Instance.SetEndScreenData(
+          scoreResult.totalScore,
+          scoreResult.grade,
+          finalBalance,
+          elapsed,
+          _foodCorrectCount + _foodWrongCount,
+          trashCount,
+          sessionData.session_summary.completed_at
+      );
+      Debug.Log("[SessionLogger] End screen data set successfully");
     }
     else
     {
-      Debug.LogError($"[SessionLogger] Failed to save session: {result.ErrorMessage}");
+      Debug.LogError("[SessionLogger] AuthUIController.Instance is null!");
+    }
+
+    // Fire-and-forget Firebase save (DatabaseManager persists via DontDestroyOnLoad)
+    string userId = !string.IsNullOrEmpty(_userId) ? _userId : AuthManager.Instance?.CurrentUser?.UserId;
+    if (!string.IsNullOrEmpty(userId))
+    {
+      SaveSessionDataAsync(userId, _sessionTimestamp, sessionData);
+    }
+    else
+    {
+      Debug.LogError("[SessionLogger] No authenticated user — session not saved to Firebase");
+    }
+
+    // Wait 3 seconds then load MenuScene
+    StartCoroutine(LoadMenuSceneAfterDelay(3f));
+  }
+
+  private IEnumerator LoadMenuSceneAfterDelay(float delay)
+  {
+    yield return new WaitForSeconds(delay);
+    SceneManager.LoadScene("MenuScene");
+  }
+
+  /// <summary>
+  /// Fire-and-forget async helper for Firebase save.
+  /// Runs on DatabaseManager which is DontDestroyOnLoad.
+  /// </summary>
+  private async void SaveSessionDataAsync(string userId, string sessionId, FirebaseSessionData sessionData)
+  {
+    try
+    {
+      var result = await DatabaseManager.Instance.SaveSessionData(userId, sessionId, sessionData);
+
+      if (result.Success)
+      {
+        Debug.Log("[SessionLogger] Session saved to Firebase successfully");
+      }
+      else
+      {
+        Debug.LogError($"[SessionLogger] Firebase save failed: {result.ErrorMessage}");
+      }
+    }
+    catch (Exception ex)
+    {
+      Debug.LogError($"[SessionLogger] Firebase save exception: {ex.Message}");
     }
   }
 }

@@ -54,6 +54,8 @@ namespace BentoBoss.FirebaseManagers
     public int food_wrong_count;
     public int change_correct_count;
     public int change_wrong_count;
+    public int final_score;
+    public string grade;
     public string completed_at;
 
     /// <summary>
@@ -71,6 +73,8 @@ namespace BentoBoss.FirebaseManagers
         { "food_wrong_count", food_wrong_count },
         { "change_correct_count", change_correct_count },
         { "change_wrong_count", change_wrong_count },
+        { "final_score", final_score },
+        { "grade", grade },
         { "completed_at", completed_at }
       };
     }
