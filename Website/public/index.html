@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bento Boss — Login</title>
+    <link rel="icon" id="favicon" href="" type="image/png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -300,6 +301,8 @@
           img.onerror = () => {
             placeholder.classList.add("hidden");
           };
+          // Set favicon
+          document.getElementById("favicon").href = logoURL;
         } catch (e) {
           document.getElementById("logo-placeholder").classList.add("hidden");
         }
