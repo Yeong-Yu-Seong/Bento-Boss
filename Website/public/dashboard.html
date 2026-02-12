@@ -1005,7 +1005,7 @@
         document.getElementById("modal-body").innerHTML = `
         <h3 class="font-heading text-lg font-bold text-loam">Confirm Reset</h3>
         <p class="text-sm text-grass mt-2">Type <strong class="text-loam">RESET</strong> to confirm.</p>
-        <input id="reset-confirm-input" type="text" placeholder="Type RESET" class="mt-3 rounded-full h-11 px-6 text-base w-full border-2 border-timber bg-white/60 focus:border-ember focus:ring-2 focus:ring-ember/20 focus:outline-none" oninput="checkResetInput()" />
+        <input id="reset-confirm-input" type="text" placeholder="Type RESET to confirm" class="mt-3 rounded-full h-11 px-6 text-base w-full border-2 border-timber bg-white/60 focus:border-ember focus:ring-2 focus:ring-ember/20 focus:outline-none" oninput="checkResetInput()" />
         <div class="flex gap-3 mt-6 justify-end">
           <button onclick="closeModal()" class="border-2 border-timber text-loam hover:bg-stone rounded-full px-6 h-10 text-sm font-semibold transition-all">Cancel</button>
           <button id="reset-confirm-btn" disabled class="bg-ember text-white rounded-full px-6 h-10 text-sm font-bold opacity-50 cursor-not-allowed transition-all" onclick="executeResetAll()">Reset All Data</button>
