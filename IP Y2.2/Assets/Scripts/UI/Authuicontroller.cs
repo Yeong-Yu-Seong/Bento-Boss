@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -55,6 +56,21 @@ public class AuthUIController : MonoBehaviour
   [SerializeField] private GameObject handbookPanel;
   [SerializeField] private Button handbookBackButton;
 
+  // Account Details (2 fields)
+  [SerializeField] private TextMeshProUGUI handbookUsernameText;
+  [SerializeField] private TextMeshProUGUI handbookEmailText;
+
+  // Aggregate Statistics (9 fields)
+  [SerializeField] private TextMeshProUGUI handbookTotalPlaysText;
+  [SerializeField] private TextMeshProUGUI handbookBestScoreText;
+  [SerializeField] private TextMeshProUGUI handbookRecentScoreText;
+  [SerializeField] private TextMeshProUGUI handbookBestGradeText;
+  [SerializeField] private TextMeshProUGUI handbookOrdersCompletedText;
+  [SerializeField] private TextMeshProUGUI handbookOrderAccuracyText;
+  [SerializeField] private TextMeshProUGUI handbookChangeAccuracyText;
+  [SerializeField] private TextMeshProUGUI handbookHighestBalanceText;
+  [SerializeField] private TextMeshProUGUI handbookPlayTimeText;
+
   [Header("Credits Panel")]
   [SerializeField] private GameObject creditPanel;
   [SerializeField] private Button creditBackButton;
@@ -62,6 +78,7 @@ public class AuthUIController : MonoBehaviour
   [Header("Settings Panel")]
   [SerializeField] private GameObject settingsPanel;
   [SerializeField] private Button settingsBackButton;
+  [SerializeField] private Slider musicVolumeSlider;
 
   [Header("End Screen Panel")]
   [SerializeField] private GameObject endScreenPanel;
@@ -144,6 +161,10 @@ public class AuthUIController : MonoBehaviour
     MakeTextClickableWithButton(goToLoginText, ShowLoginPanel);
     MakeTextClickableWithButton(forgotPasswordText, ShowForgotPasswordPanel);
     if (backToLoginButton != null) backToLoginButton.onClick.AddListener(ShowLoginPanel);
+
+    // Hook up volume slider to AudioManager
+    if (musicVolumeSlider != null && AudioManager.Instance != null)
+      AudioManager.Instance.InitSlider(musicVolumeSlider);
 
     // Force show login panel
     ShowLoginPanel();
@@ -239,11 +260,102 @@ public class AuthUIController : MonoBehaviour
     if (guidePanel != null) guidePanel.SetActive(true);
   }
 
-  void ShowHandbookPanel()
+  async void ShowHandbookPanel()
   {
     Debug.Log("[AuthUI] Showing Handbook Panel");
     HideAllPanels();
     if (handbookPanel != null) handbookPanel.SetActive(true);
+
+    // Populate with Firebase data
+    await PopulateHandbookData();
+  }
+
+  /// <summary>
+  /// Fetches user data and aggregate statistics from Firebase and populates the Handbook UI
+  /// </summary>
+  private async Task PopulateHandbookData()
+  {
+    string userId = AuthManager.Instance?.CurrentUser?.UserId;
+    if (string.IsNullOrEmpty(userId))
+    {
+      Debug.LogWarning("[AuthUI] Cannot populate handbook - no user logged in");
+      return;
+    }
+
+    // Fetch user account details
+    var userDataResult = await DatabaseManager.Instance.GetUserData(userId);
+    if (userDataResult.Success && userDataResult.Data != null)
+    {
+      if (handbookUsernameText != null)
+        handbookUsernameText.text = $"Username: {userDataResult.Data.username}";
+
+      if (handbookEmailText != null)
+        handbookEmailText.text = $"Email: {userDataResult.Data.email}";
+    }
+    else
+    {
+      Debug.LogWarning($"[AuthUI] Failed to load user data: {userDataResult.ErrorMessage}");
+    }
+
+    // Fetch aggregate statistics
+    var statsResult = await DatabaseManager.Instance.GetAggregateStats(userId);
+    if (statsResult.Success && statsResult.Data != null)
+    {
+      var stats = statsResult.Data;
+
+      // Total Plays
+      if (handbookTotalPlaysText != null)
+        handbookTotalPlaysText.text = $"Total Plays: {stats.totalSessions}";
+
+      // Best Score
+      if (handbookBestScoreText != null)
+        handbookBestScoreText.text = $"Best Score: {stats.bestScore}";
+
+      // Recent Score
+      if (handbookRecentScoreText != null)
+        handbookRecentScoreText.text = $"Recent Score: {stats.recentScore}";
+
+      // Best Grade
+      if (handbookBestGradeText != null)
+        handbookBestGradeText.text = $"Best Grade: {stats.bestGrade}";
+
+      // Orders Completed
+      if (handbookOrdersCompletedText != null)
+        handbookOrdersCompletedText.text = $"Orders Completed: {stats.totalOrdersCompleted}";
+
+      // Order Accuracy (Food Accuracy)
+      if (handbookOrderAccuracyText != null)
+        handbookOrderAccuracyText.text = $"Order Accuracy: {stats.foodAccuracyPercent:F1}%";
+
+      // Change Accuracy
+      if (handbookChangeAccuracyText != null)
+        handbookChangeAccuracyText.text = $"Change Accuracy: {stats.changeAccuracyPercent:F1}%";
+
+      // Highest Balance
+      if (handbookHighestBalanceText != null)
+        handbookHighestBalanceText.text = $"Highest Balance: ${stats.highestBalance:F2}";
+
+      // Play Time (formatted as "Xh Ym" or "Ym")
+      if (handbookPlayTimeText != null)
+        handbookPlayTimeText.text = $"Play Time: {stats.GetFormattedPlaytime()}";
+
+      Debug.Log($"[AuthUI] Handbook populated with {stats.totalSessions} sessions");
+    }
+    else
+    {
+      Debug.LogWarning($"[AuthUI] Failed to load aggregate stats: {statsResult.ErrorMessage}");
+
+      // Show zeros if no data
+      if (handbookTotalPlaysText != null) handbookTotalPlaysText.text = "Total Plays: 0";
+      if (handbookBestScoreText != null) handbookBestScoreText.text = "Best Score: 0";
+      if (handbookRecentScoreText != null) handbookRecentScoreText.text = "Recent Score: 0";
+      if (handbookBestGradeText != null) handbookBestGradeText.text = "Best Grade: F";
+      if (handbookOrdersCompletedText != null) handbookOrdersCompletedText.text = "Orders Completed: 0";
+      if (handbookOrderAccuracyText != null) handbookOrderAccuracyText.text = "Order Accuracy: 0.0%";
+      if (handbookChangeAccuracyText != null) handbookChangeAccuracyText.text = "Change Accuracy: 0.0%";
+      if (handbookHighestBalanceText != null) handbookHighestBalanceText.text = "Highest Balance: $0.00";
+      if (handbookPlayTimeText != null) handbookPlayTimeText.text = "Play Time: 0m";
+    }
   }
 
   void ShowSettingsPanel()

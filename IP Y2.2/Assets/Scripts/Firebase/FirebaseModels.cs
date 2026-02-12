@@ -181,4 +181,48 @@ namespace BentoBoss.FirebaseManagers
       };
     }
   }
+
+  /// <summary>
+  /// Aggregate statistics calculated across all user sessions
+  /// Used for Handbook panel display
+  /// </summary>
+  [Serializable]
+  public class AggregateStats
+  {
+    // Meta
+    public int totalSessions;
+
+    // Performance
+    public int bestScore;           // Highest score from any session
+    public int recentScore;         // Most recent session score
+    public string bestGrade;        // Best grade achieved (S > A > B > C > D > F)
+
+    // Completion
+    public int totalOrdersCompleted;  // Sum of (food_correct + food_wrong) across all sessions
+
+    // Accuracy
+    public float foodAccuracyPercent;   // (total food_correct / total food orders) * 100
+    public float changeAccuracyPercent; // (total change_correct / total change orders) * 100
+
+    // Economy
+    public float highestBalance;    // Best final_balance from any session
+
+    // Time
+    public float totalPlaytimeSeconds;  // Sum of all total_time_seconds
+
+    /// <summary>
+    /// Helper method to format playtime as "Xh Ym" or "Ym"
+    /// </summary>
+    public string GetFormattedPlaytime()
+    {
+      int totalMinutes = UnityEngine.Mathf.FloorToInt(totalPlaytimeSeconds / 60f);
+      int hours = totalMinutes / 60;
+      int minutes = totalMinutes % 60;
+
+      if (hours > 0)
+        return $"{hours}h {minutes}m";
+      else
+        return $"{minutes}m";
+    }
+  }
 }
