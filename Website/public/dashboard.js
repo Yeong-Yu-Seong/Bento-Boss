@@ -22,15 +22,13 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 const storage = getStorage(app);
 
-// ===== STATE =====
 let currentUser = null;
 let isAdmin = false;
-let usersData = {}; // cached users snapshot
-let sessionsData = {}; // cached sessions snapshot
-let expandedPlayerUid = null; // which player row is expanded
-let activeSessionKey = null; // which session tab is selected
+let usersData = {};
+let sessionsData = {};
+let expandedPlayerUid = null;
+let activeSessionKey = null;
 
-// ===== AUTH GUARD =====
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "index.html";
@@ -38,7 +36,6 @@ onAuthStateChanged(auth, async (user) => {
   }
   currentUser = user;
 
-  // Check admin status
   try {
     const snap = await get(ref(db, "users/" + user.uid + "/isAdmin"));
     isAdmin = snap.val() === true;
@@ -46,11 +43,9 @@ onAuthStateChanged(auth, async (user) => {
     isAdmin = false;
   }
 
-  // Show dashboard
   document.getElementById("loading-screen").classList.add("hidden");
   document.getElementById("dashboard-content").classList.remove("hidden");
 
-  // Show admin UI elements
   if (isAdmin) {
     document.getElementById("admin-badge").classList.remove("hidden");
     document.getElementById("export-dropdown-wrap").classList.remove("hidden");
@@ -60,7 +55,6 @@ onAuthStateChanged(auth, async (user) => {
       .forEach((el) => (el.style.display = ""));
   }
 
-  // Set username in header
   try {
     const uSnap = await get(ref(db, "users/" + user.uid + "/username"));
     document.getElementById("header-username").textContent =
@@ -69,14 +63,10 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById("header-username").textContent = user.email;
   }
 
-  // Load logo
   loadHeaderLogo();
-
-  // Start real-time listeners
   setupListeners();
 });
 
-// ===== LOGO =====
 async function loadHeaderLogo() {
   try {
     const logoRef = storageRef(storage, "logo.png");
@@ -91,33 +81,27 @@ async function loadHeaderLogo() {
     img.onerror = () => {
       ph.classList.add("hidden");
     };
-    // Set favicon
     document.getElementById("favicon").href = url;
   } catch (e) {
     document.getElementById("header-logo-placeholder").classList.add("hidden");
   }
 }
 
-// ===== REAL-TIME LISTENERS =====
 function setupListeners() {
-  // Listen to users node
   onValue(ref(db, "users"), (snapshot) => {
     usersData = snapshot.val() || {};
     rebuildDashboard();
   });
-  // Listen to sessions node
   onValue(ref(db, "sessions"), (snapshot) => {
     sessionsData = snapshot.val() || {};
     rebuildDashboard();
   });
 }
 
-// ===== REBUILD ENTIRE DASHBOARD =====
 function rebuildDashboard() {
   updateStats();
   renderPlayersTable();
   renderLeaderboard();
-  // Re-expand detail panel if one was open
   if (expandedPlayerUid && usersData[expandedPlayerUid]) {
     renderSessionPanel(expandedPlayerUid);
   } else {
@@ -126,7 +110,6 @@ function rebuildDashboard() {
   }
 }
 
-// ===== STATS =====
 function updateStats() {
   const userKeys = Object.keys(usersData).filter(
     (uid) => !usersData[uid].isAdmin,
@@ -165,7 +148,6 @@ function formatTime(seconds) {
   return m.toString().padStart(2, "0") + ":" + s.toString().padStart(2, "0");
 }
 
-// ===== PLAYERS TABLE =====
 function renderPlayersTable() {
   const tbody = document.getElementById("players-tbody");
   const emptyEl = document.getElementById("players-empty");
@@ -187,7 +169,6 @@ function renderPlayersTable() {
     const sessionKeys = Object.keys(playerSessions);
     const sessionCount = sessionKeys.length;
 
-    // Best score
     let bestScore = 0;
     let lastPlayed = null;
     for (const sKey of sessionKeys) {
@@ -243,7 +224,6 @@ function formatDate(d) {
   return `${day} ${month} ${year}, ${hours}:${mins} ${ampm}`;
 }
 
-// ===== SESSION DETAIL PANEL =====
 window.togglePlayerDetail = function (uid) {
   if (expandedPlayerUid === uid) {
     expandedPlayerUid = null;
@@ -271,7 +251,6 @@ function renderSessionPanel(uid) {
     return;
   }
 
-  // Default to first session if none selected
   if (!activeSessionKey || !playerSessions[activeSessionKey]) {
     activeSessionKey = sessionKeys[0];
   }
@@ -281,7 +260,6 @@ function renderSessionPanel(uid) {
   const inventory = session?.inventory_logs || {};
   const transactions = session?.transaction_history || {};
 
-  // Build session tabs
   let tabsHtml = "";
   for (const sKey of sessionKeys) {
     const sData = playerSessions[sKey]?.session_summary;
@@ -302,7 +280,6 @@ function renderSessionPanel(uid) {
         </button>`;
   }
 
-  // Inventory chips
   const inventoryItems = [
     { key: "apple_count", label: "Apple" },
     { key: "banana_count", label: "Banana" },
@@ -323,7 +300,6 @@ function renderSessionPanel(uid) {
     }
   }
 
-  // Transaction table
   const orderKeys = Object.keys(transactions).sort();
   let ordersHtml = "";
   let correctItems = 0,
@@ -349,7 +325,6 @@ function renderSessionPanel(uid) {
         </tr>`;
   }
 
-  // Accuracy — use pre-computed counts from session_summary if available
   correctItems = summary.food_correct_count ?? correctItems;
   correctChange = summary.change_correct_count ?? correctChange;
   const foodWrong = summary.food_wrong_count ?? totalOrders - correctItems;
@@ -362,7 +337,6 @@ function renderSessionPanel(uid) {
     return pct >= 80 ? "text-moss" : pct >= 50 ? "text-clay" : "text-ember";
   }
 
-  // Username edit
   const editBtnHtml = isAdmin
     ? `<button onclick="event.stopPropagation(); startEditUsername('${uid}')" class="text-grass hover:text-moss p-1 transition-colors" title="Edit username">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
@@ -466,12 +440,10 @@ window.selectSession = function (uid, sKey) {
   renderSessionPanel(uid);
 };
 
-// ===== LEADERBOARD =====
 function renderLeaderboard() {
   const list = document.getElementById("leaderboard-list");
   const emptyEl = document.getElementById("leaderboard-empty");
 
-  // Build scores: best final_balance per user
   const scores = [];
   for (const uid of Object.keys(usersData)) {
     if (usersData[uid].isAdmin) continue;
@@ -525,7 +497,6 @@ function renderLeaderboard() {
   list.innerHTML = html;
 }
 
-// ===== ADMIN: EDIT USERNAME =====
 window.startEditUsername = function (uid) {
   document.getElementById("detail-username-display").classList.add("hidden");
   document.getElementById("detail-username-edit").classList.remove("hidden");
@@ -545,13 +516,11 @@ window.saveUsername = async function (uid) {
     await update(ref(db, "users/" + uid), { username: newName });
     showToast("Username updated!", "success");
     cancelEditUsername();
-    // Real-time listener will auto-update the UI
   } catch (e) {
     showToast("Failed to update username. " + e.message, "error");
   }
 };
 
-// ===== ADMIN: DELETE PLAYER =====
 window.confirmDeletePlayer = function (uid, username) {
   showModal(`
         <h3 class="font-heading text-lg font-bold text-loam">Delete Player</h3>
@@ -577,7 +546,6 @@ window.deletePlayer = async function (uid) {
   }
 };
 
-// ===== ADMIN: DELETE SESSION =====
 window.confirmDeleteSession = function (uid, sKey, dateLabel) {
   showModal(`
         <h3 class="font-heading text-lg font-bold text-loam">Delete Session</h3>
@@ -599,7 +567,6 @@ window.deleteSession = async function (uid, sKey) {
   }
 };
 
-// ===== ADMIN: RESET ALL DATA =====
 window.showResetModal = function () {
   showModal(`
         <h3 class="font-heading text-lg font-bold text-loam">Reset All Data</h3>
@@ -637,9 +604,7 @@ window.checkResetInput = function () {
 };
 window.executeResetAll = async function () {
   try {
-    // Delete all sessions
     await remove(ref(db, "sessions"));
-    // Delete all users except current admin
     for (const uid of Object.keys(usersData)) {
       if (uid !== currentUser.uid) {
         await remove(ref(db, "users/" + uid));
@@ -655,11 +620,9 @@ window.executeResetAll = async function () {
   }
 };
 
-// ===== EXPORT =====
 window.toggleExportDropdown = function () {
   document.getElementById("export-dropdown").classList.toggle("hidden");
 };
-// Close dropdown on outside click
 document.addEventListener("click", (e) => {
   const wrap = document.getElementById("export-dropdown-wrap");
   if (wrap && !wrap.contains(e.target)) {
@@ -752,17 +715,14 @@ function todayStr() {
   );
 }
 
-// ===== LOGOUT =====
 window.handleLogout = async function () {
   try {
     await signOut(auth);
-    // onAuthStateChanged will redirect
   } catch (e) {
     showToast("Failed to log out.", "error");
   }
 };
 
-// ===== MODAL SYSTEM =====
 function showModal(bodyHtml) {
   const backdrop = document.getElementById("modal-backdrop");
   const card = document.getElementById("modal-card");
@@ -783,12 +743,10 @@ window.closeModal = function () {
 window.closeModalOnBackdrop = function (e) {
   if (e.target === document.getElementById("modal-backdrop")) closeModal();
 };
-// Close modal on Escape
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeModal();
 });
 
-// ===== TOAST SYSTEM =====
 function showToast(msg, type) {
   const container = document.getElementById("toast-container");
   const toast = document.createElement("div");
@@ -806,7 +764,6 @@ function showToast(msg, type) {
   }, 3000);
 }
 
-// ===== UTILITIES =====
 function escHtml(str) {
   const d = document.createElement("div");
   d.textContent = str;
