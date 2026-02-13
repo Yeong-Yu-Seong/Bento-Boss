@@ -2,3 +2,5 @@ Website/.claude/settings.local.json
 Website/node_modules
 Website/bun.lock
 Website/package.json
+
+apk/
