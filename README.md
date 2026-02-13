@@ -1,7 +1,3 @@
-Here is the professional, emoji-free version of the README. It uses clean formatting, tables, and standard Markdown syntax to maintain a high-quality aesthetic suitable for a technical portfolio or repository.
-
----
-
 # Bento Boss
 
 **A VR canteen simulation built to help kids practise financial literacy.**
