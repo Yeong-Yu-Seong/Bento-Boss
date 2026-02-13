@@ -14113,6 +14113,7 @@ MonoBehaviour:
   bgmMaxVolume: 0.4
   rainMaxVolume: 1
   crossfadeDuration: 0.3
+  sfxCooldown: 1
 --- !u!1 &3215343143985309328
 GameObject:
   m_ObjectHideFlags: 0
@@ -16786,7 +16787,7 @@ GameObject:
   - component: {fileID: 1107035386595422950}
   - component: {fileID: 7864870928315937617}
   m_Layer: 0
-  m_Name: Canvas
+  m_Name: Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -26494,7 +26495,7 @@ GameObject:
   - component: {fileID: 6725262076863556870}
   - component: {fileID: 777063501283853342}
   m_Layer: 0
-  m_Name: Canvas (1)
+  m_Name: Dark
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

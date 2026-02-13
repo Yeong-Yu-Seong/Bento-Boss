@@ -4,6 +4,7 @@
 /// Description: Manages background music crossfading between scenes and rain ambience with persistent volume control.
 /// </summary>
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -26,12 +27,18 @@ public class AudioManager : MonoBehaviour
   [Header("Crossfade")]
   [SerializeField] private float crossfadeDuration = 0.3f;
 
+  [Header("SFX Settings")]
+  [SerializeField] private float sfxCooldown = 1f;
+
   private AudioSource bgmSource;
   private AudioSource rainSource;
+  private AudioSource sfxSource;
   private float currentVolume = 1f;
   private Coroutine crossfadeRoutine;
 
   private const string VolumeKey = "MusicVolume";
+
+  private Dictionary<string, float> lastPlayedTimes = new Dictionary<string, float>();
 
   void Awake()
   {
@@ -40,6 +47,7 @@ public class AudioManager : MonoBehaviour
       Destroy(this);
       return;
     }
+
     Instance = this;
 
     bgmSource = gameObject.AddComponent<AudioSource>();
@@ -49,6 +57,9 @@ public class AudioManager : MonoBehaviour
     rainSource = gameObject.AddComponent<AudioSource>();
     rainSource.loop = true;
     rainSource.playOnAwake = false;
+
+    sfxSource = gameObject.AddComponent<AudioSource>();
+    sfxSource.playOnAwake = false;
   }
 
   void OnEnable()
@@ -110,20 +121,45 @@ public class AudioManager : MonoBehaviour
       bgmSource.volume = Mathf.Lerp(startVol, 0f, t / crossfadeDuration);
       yield return null;
     }
-    bgmSource.volume = 0f;
 
+    bgmSource.volume = 0f;
     bgmSource.clip = newClip;
     bgmSource.Play();
 
     float targetVol = currentVolume * bgmMaxVolume;
+
     for (float t = 0f; t < crossfadeDuration; t += Time.unscaledDeltaTime)
     {
       bgmSource.volume = Mathf.Lerp(0f, targetVol, t / crossfadeDuration);
       yield return null;
     }
-    bgmSource.volume = targetVol;
 
+    bgmSource.volume = targetVol;
     crossfadeRoutine = null;
+  }
+
+  /// <summary>
+  /// Plays SFX with cooldown protection to prevent rapid retriggering
+  /// </summary>
+  public void PlaySFX(AudioClip clip)
+  {
+    if (clip == null) return;
+
+    string clipName = clip.name;
+    float currentTime = Time.time;
+
+    // Check if this clip was played recently
+    if (lastPlayedTimes.ContainsKey(clipName))
+    {
+      if (currentTime - lastPlayedTimes[clipName] < sfxCooldown)
+      {
+        return; // Too soon, ignore this request
+      }
+    }
+
+    // Play the sound and update last played time
+    sfxSource.PlayOneShot(clip, currentVolume);
+    lastPlayedTimes[clipName] = currentTime;
   }
 
   /// <summary>
