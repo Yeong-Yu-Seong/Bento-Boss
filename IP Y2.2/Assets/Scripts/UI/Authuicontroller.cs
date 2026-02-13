@@ -96,6 +96,89 @@ public class AuthUIController : MonoBehaviour
   [Header("Settings")]
   [SerializeField] private string gameSceneName = "GameScene";
 
+  [Header("Dark Mode - Dual Canvas")]
+  [SerializeField] private GameObject lightCanvas;
+  [SerializeField] private GameObject darkCanvas;
+
+  [Header("Dark Canvas - Panels")]
+  [SerializeField] private GameObject darkLoginPanel;
+  [SerializeField] private GameObject darkSignUpPanel;
+  [SerializeField] private GameObject darkForgotPasswordPanel;
+  [SerializeField] private GameObject darkMenuPanel;
+  [SerializeField] private GameObject darkGuidePanel;
+  [SerializeField] private GameObject darkHandbookPanel;
+  [SerializeField] private GameObject darkCreditPanel;
+  [SerializeField] private GameObject darkSettingsPanel;
+  [SerializeField] private GameObject darkEndScreenPanel;
+
+  [Header("Dark Canvas - Login Panel")]
+  [SerializeField] private TMP_InputField darkLoginEmailInput;
+  [SerializeField] private TMP_InputField darkLoginPasswordInput;
+  [SerializeField] private Button darkLoginButton;
+  [SerializeField] private TextMeshProUGUI darkLoginErrorText;
+  [SerializeField] private TextMeshProUGUI darkGoToSignUpText;
+  [SerializeField] private TextMeshProUGUI darkForgotPasswordText;
+
+  [Header("Dark Canvas - Sign Up Panel")]
+  [SerializeField] private TMP_InputField darkSignUpUsernameInput;
+  [SerializeField] private TMP_InputField darkSignUpEmailInput;
+  [SerializeField] private TMP_InputField darkSignUpPasswordInput;
+  [SerializeField] private Button darkSignUpButton;
+  [SerializeField] private TextMeshProUGUI darkSignUpErrorText;
+  [SerializeField] private TextMeshProUGUI darkGoToLoginText;
+
+  [Header("Dark Canvas - Forgot Password Panel")]
+  [SerializeField] private TMP_InputField darkForgotPasswordEmailInput;
+  [SerializeField] private Button darkSendResetButton;
+  [SerializeField] private TextMeshProUGUI darkForgotPasswordErrorText;
+  [SerializeField] private Button darkBackToLoginButton;
+
+  [Header("Dark Canvas - Menu Panel")]
+  [SerializeField] private Button darkStartGameButton;
+  [SerializeField] private Button darkCreditsButton;
+  [SerializeField] private Button darkHandbookButton;
+  [SerializeField] private Button darkSettingsButton;
+  [SerializeField] private Button darkSignOutButton;
+  [SerializeField] private TextMeshProUGUI darkWelcomeText;
+
+  [Header("Dark Canvas - Other Panels")]
+  [SerializeField] private Button darkGuideBackButton;
+  [SerializeField] private Button darkHandbookBackButton;
+  [SerializeField] private Button darkCreditBackButton;
+  [SerializeField] private Button darkSettingsBackButton;
+  [SerializeField] private Button darkPlayAgainButton;
+  [SerializeField] private Button darkMainMenuButtonEndScreen;
+  [SerializeField] private Slider darkMusicVolumeSlider;
+
+  [Header("Dark Canvas - Handbook Stats")]
+  [SerializeField] private TextMeshProUGUI darkHandbookUsernameText;
+  [SerializeField] private TextMeshProUGUI darkHandbookEmailText;
+  [SerializeField] private TextMeshProUGUI darkHandbookTotalPlaysText;
+  [SerializeField] private TextMeshProUGUI darkHandbookBestScoreText;
+  [SerializeField] private TextMeshProUGUI darkHandbookRecentScoreText;
+  [SerializeField] private TextMeshProUGUI darkHandbookBestGradeText;
+  [SerializeField] private TextMeshProUGUI darkHandbookOrdersCompletedText;
+  [SerializeField] private TextMeshProUGUI darkHandbookOrderAccuracyText;
+  [SerializeField] private TextMeshProUGUI darkHandbookChangeAccuracyText;
+  [SerializeField] private TextMeshProUGUI darkHandbookHighestBalanceText;
+  [SerializeField] private TextMeshProUGUI darkHandbookPlayTimeText;
+
+  [Header("Dark Canvas - End Screen")]
+  [SerializeField] private TextMeshProUGUI darkDateText;
+  [SerializeField] private TextMeshProUGUI darkGradeText;
+  [SerializeField] private TextMeshProUGUI darkScoreText;
+  [SerializeField] private TextMeshProUGUI darkEarningsText;
+  [SerializeField] private TextMeshProUGUI darkStatsText;
+
+  [Header("Theme Toggle Buttons")]
+  [SerializeField] private Button lightModeButton;
+  [SerializeField] private Button darkModeButton;
+  [SerializeField] private Button darkLightModeButton;
+  [SerializeField] private Button darkDarkModeButton;
+
+  private bool isDarkMode = false;
+  private const string DarkModeKey = "DarkMode";
+
   private bool _hasEndScreenData = false;
   private int _finalScore;
   private string _grade;
@@ -162,6 +245,14 @@ public class AuthUIController : MonoBehaviour
     if (musicVolumeSlider != null && AudioManager.Instance != null)
       AudioManager.Instance.InitSlider(musicVolumeSlider);
 
+    // Dark mode initialization
+    isDarkMode = PlayerPrefs.GetInt(DarkModeKey, 0) == 1;
+    ApplyTheme();
+
+    // Setup dark canvas button listeners
+    SetupDarkCanvasListeners();
+    SetupThemeToggleButtons();
+
     ShowLoginPanel();
     Debug.Log("[AuthUI] Started - Login panel active");
   }
@@ -204,6 +295,16 @@ public class AuthUIController : MonoBehaviour
     if (settingsPanel != null) settingsPanel.SetActive(false);
     if (creditPanel != null) creditPanel.SetActive(false);
     if (endScreenPanel != null) endScreenPanel.SetActive(false);
+
+    if (darkLoginPanel != null) darkLoginPanel.SetActive(false);
+    if (darkSignUpPanel != null) darkSignUpPanel.SetActive(false);
+    if (darkForgotPasswordPanel != null) darkForgotPasswordPanel.SetActive(false);
+    if (darkMenuPanel != null) darkMenuPanel.SetActive(false);
+    if (darkGuidePanel != null) darkGuidePanel.SetActive(false);
+    if (darkHandbookPanel != null) darkHandbookPanel.SetActive(false);
+    if (darkSettingsPanel != null) darkSettingsPanel.SetActive(false);
+    if (darkCreditPanel != null) darkCreditPanel.SetActive(false);
+    if (darkEndScreenPanel != null) darkEndScreenPanel.SetActive(false);
   }
 
   void ShowLoginPanel()
@@ -211,6 +312,7 @@ public class AuthUIController : MonoBehaviour
     Debug.Log("[AuthUI] Showing Login Panel");
     HideAllPanels();
     if (loginPanel != null) loginPanel.SetActive(true);
+    if (darkLoginPanel != null) darkLoginPanel.SetActive(true);
     ClearAll();
   }
 
@@ -219,6 +321,7 @@ public class AuthUIController : MonoBehaviour
     Debug.Log("[AuthUI] Showing Sign Up Panel");
     HideAllPanels();
     if (signUpPanel != null) signUpPanel.SetActive(true);
+    if (darkSignUpPanel != null) darkSignUpPanel.SetActive(true);
     ClearAll();
   }
 
@@ -234,6 +337,7 @@ public class AuthUIController : MonoBehaviour
 
     HideAllPanels();
     forgotPasswordPanel.SetActive(true);
+    if (darkForgotPasswordPanel != null) darkForgotPasswordPanel.SetActive(true);
     ClearAll();
   }
 
@@ -243,6 +347,7 @@ public class AuthUIController : MonoBehaviour
     if (_canvas != null) _canvas.enabled = true;
     HideAllPanels();
     if (menuPanel != null) menuPanel.SetActive(true);
+    if (darkMenuPanel != null) darkMenuPanel.SetActive(true);
   }
 
   void ShowGuidePanel()
@@ -250,6 +355,7 @@ public class AuthUIController : MonoBehaviour
     Debug.Log("[AuthUI] Showing Guide Panel");
     HideAllPanels();
     if (guidePanel != null) guidePanel.SetActive(true);
+    if (darkGuidePanel != null) darkGuidePanel.SetActive(true);
   }
 
   async void ShowHandbookPanel()
@@ -257,12 +363,13 @@ public class AuthUIController : MonoBehaviour
     Debug.Log("[AuthUI] Showing Handbook Panel");
     HideAllPanels();
     if (handbookPanel != null) handbookPanel.SetActive(true);
+    if (darkHandbookPanel != null) darkHandbookPanel.SetActive(true);
 
     await PopulateHandbookData();
   }
 
   /// <summary>
-  /// Fetches user data and aggregate statistics from Firebase to populate the Handbook UI
+  /// Fetches user data and aggregate statistics from Firebase to populate Handbook UI on both light and dark canvases
   /// </summary>
   private async Task PopulateHandbookData()
   {
@@ -278,9 +385,13 @@ public class AuthUIController : MonoBehaviour
     {
       if (handbookUsernameText != null)
         handbookUsernameText.text = $"Username: {userDataResult.Data.username}";
+      if (darkHandbookUsernameText != null)
+        darkHandbookUsernameText.text = $"Username: {userDataResult.Data.username}";
 
       if (handbookEmailText != null)
         handbookEmailText.text = $"Email: {userDataResult.Data.email}";
+      if (darkHandbookEmailText != null)
+        darkHandbookEmailText.text = $"Email: {userDataResult.Data.email}";
     }
     else
     {
@@ -294,30 +405,48 @@ public class AuthUIController : MonoBehaviour
 
       if (handbookTotalPlaysText != null)
         handbookTotalPlaysText.text = $"Total Plays: {stats.totalSessions}";
+      if (darkHandbookTotalPlaysText != null)
+        darkHandbookTotalPlaysText.text = $"Total Plays: {stats.totalSessions}";
 
       if (handbookBestScoreText != null)
         handbookBestScoreText.text = $"Best Score: {stats.bestScore}";
+      if (darkHandbookBestScoreText != null)
+        darkHandbookBestScoreText.text = $"Best Score: {stats.bestScore}";
 
       if (handbookRecentScoreText != null)
         handbookRecentScoreText.text = $"Recent Score: {stats.recentScore}";
+      if (darkHandbookRecentScoreText != null)
+        darkHandbookRecentScoreText.text = $"Recent Score: {stats.recentScore}";
 
       if (handbookBestGradeText != null)
         handbookBestGradeText.text = $"Best Grade: {stats.bestGrade}";
+      if (darkHandbookBestGradeText != null)
+        darkHandbookBestGradeText.text = $"Best Grade: {stats.bestGrade}";
 
       if (handbookOrdersCompletedText != null)
         handbookOrdersCompletedText.text = $"Orders Completed: {stats.totalOrdersCompleted}";
+      if (darkHandbookOrdersCompletedText != null)
+        darkHandbookOrdersCompletedText.text = $"Orders Completed: {stats.totalOrdersCompleted}";
 
       if (handbookOrderAccuracyText != null)
         handbookOrderAccuracyText.text = $"Order Accuracy: {stats.foodAccuracyPercent:F1}%";
+      if (darkHandbookOrderAccuracyText != null)
+        darkHandbookOrderAccuracyText.text = $"Order Accuracy: {stats.foodAccuracyPercent:F1}%";
 
       if (handbookChangeAccuracyText != null)
         handbookChangeAccuracyText.text = $"Change Accuracy: {stats.changeAccuracyPercent:F1}%";
+      if (darkHandbookChangeAccuracyText != null)
+        darkHandbookChangeAccuracyText.text = $"Change Accuracy: {stats.changeAccuracyPercent:F1}%";
 
       if (handbookHighestBalanceText != null)
         handbookHighestBalanceText.text = $"Highest Balance: ${stats.highestBalance:F2}";
+      if (darkHandbookHighestBalanceText != null)
+        darkHandbookHighestBalanceText.text = $"Highest Balance: ${stats.highestBalance:F2}";
 
       if (handbookPlayTimeText != null)
         handbookPlayTimeText.text = $"Play Time: {stats.GetFormattedPlaytime()}";
+      if (darkHandbookPlayTimeText != null)
+        darkHandbookPlayTimeText.text = $"Play Time: {stats.GetFormattedPlaytime()}";
 
       Debug.Log($"[AuthUI] Handbook populated with {stats.totalSessions} sessions");
     }
@@ -326,14 +455,23 @@ public class AuthUIController : MonoBehaviour
       Debug.LogWarning($"[AuthUI] Failed to load aggregate stats: {statsResult.ErrorMessage}");
 
       if (handbookTotalPlaysText != null) handbookTotalPlaysText.text = "Total Plays: 0";
+      if (darkHandbookTotalPlaysText != null) darkHandbookTotalPlaysText.text = "Total Plays: 0";
       if (handbookBestScoreText != null) handbookBestScoreText.text = "Best Score: 0";
+      if (darkHandbookBestScoreText != null) darkHandbookBestScoreText.text = "Best Score: 0";
       if (handbookRecentScoreText != null) handbookRecentScoreText.text = "Recent Score: 0";
+      if (darkHandbookRecentScoreText != null) darkHandbookRecentScoreText.text = "Recent Score: 0";
       if (handbookBestGradeText != null) handbookBestGradeText.text = "Best Grade: F";
+      if (darkHandbookBestGradeText != null) darkHandbookBestGradeText.text = "Best Grade: F";
       if (handbookOrdersCompletedText != null) handbookOrdersCompletedText.text = "Orders Completed: 0";
+      if (darkHandbookOrdersCompletedText != null) darkHandbookOrdersCompletedText.text = "Orders Completed: 0";
       if (handbookOrderAccuracyText != null) handbookOrderAccuracyText.text = "Order Accuracy: 0.0%";
+      if (darkHandbookOrderAccuracyText != null) darkHandbookOrderAccuracyText.text = "Order Accuracy: 0.0%";
       if (handbookChangeAccuracyText != null) handbookChangeAccuracyText.text = "Change Accuracy: 0.0%";
+      if (darkHandbookChangeAccuracyText != null) darkHandbookChangeAccuracyText.text = "Change Accuracy: 0.0%";
       if (handbookHighestBalanceText != null) handbookHighestBalanceText.text = "Highest Balance: $0.00";
+      if (darkHandbookHighestBalanceText != null) darkHandbookHighestBalanceText.text = "Highest Balance: $0.00";
       if (handbookPlayTimeText != null) handbookPlayTimeText.text = "Play Time: 0m";
+      if (darkHandbookPlayTimeText != null) darkHandbookPlayTimeText.text = "Play Time: 0m";
     }
   }
 
@@ -342,6 +480,7 @@ public class AuthUIController : MonoBehaviour
     Debug.Log("[AuthUI] Showing Settings Panel");
     HideAllPanels();
     if (settingsPanel != null) settingsPanel.SetActive(true);
+    if (darkSettingsPanel != null) darkSettingsPanel.SetActive(true);
   }
 
   void ShowCreditPanel()
@@ -349,33 +488,46 @@ public class AuthUIController : MonoBehaviour
     Debug.Log("[AuthUI] Showing Credit Panel");
     HideAllPanels();
     if (creditPanel != null) creditPanel.SetActive(true);
+    if (darkCreditPanel != null) darkCreditPanel.SetActive(true);
   }
 
+  /// <summary>
+  /// Handles login using inputs from the active canvas (light or dark) and updates both canvases on success
+  /// </summary>
   async void OnLoginClicked()
   {
-    string email = loginEmailInput.text.Trim();
-    string password = loginPasswordInput.text;
+    string email = isDarkMode
+      ? (darkLoginEmailInput != null ? darkLoginEmailInput.text.Trim() : "")
+      : loginEmailInput.text.Trim();
+    string password = isDarkMode
+      ? (darkLoginPasswordInput != null ? darkLoginPasswordInput.text : "")
+      : loginPasswordInput.text;
 
     if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
     {
       loginErrorText.text = "Enter email and password";
+      if (darkLoginErrorText != null) darkLoginErrorText.text = "Enter email and password";
       return;
     }
 
     if (!email.Contains("@") || !email.Contains("."))
     {
       loginErrorText.text = "Invalid email format";
+      if (darkLoginErrorText != null) darkLoginErrorText.text = "Invalid email format";
       return;
     }
 
     loginErrorText.text = "Logging in...";
+    if (darkLoginErrorText != null) darkLoginErrorText.text = "Logging in...";
     loginButton.interactable = false;
+    if (darkLoginButton != null) darkLoginButton.interactable = false;
 
     var result = await AuthManager.Instance.Login(email, password);
 
     if (result.Success)
     {
       loginErrorText.text = "Success!";
+      if (darkLoginErrorText != null) darkLoginErrorText.text = "Success!";
       await System.Threading.Tasks.Task.Delay(150);
 
       string displayName = result.Data.Email;
@@ -384,53 +536,74 @@ public class AuthUIController : MonoBehaviour
         displayName = userData.Data.username;
 
       if (welcomeText != null) welcomeText.text = $"Welcome, {displayName}!";
+      if (darkWelcomeText != null) darkWelcomeText.text = $"Welcome, {displayName}!";
       ShowMenuPanel();
     }
     else
     {
       loginErrorText.text = "Invalid email/password";
+      if (darkLoginErrorText != null) darkLoginErrorText.text = "Invalid email/password";
       loginButton.interactable = true;
+      if (darkLoginButton != null) darkLoginButton.interactable = true;
     }
   }
 
+  /// <summary>
+  /// Handles sign-up using inputs from the active canvas (light or dark) and updates both canvases on success
+  /// </summary>
   async void OnSignUpClicked()
   {
-    string username = signUpUsernameInput != null ? signUpUsernameInput.text.Trim() : "";
-    string email = signUpEmailInput.text.Trim();
-    string password = signUpPasswordInput.text;
+    string username = isDarkMode
+      ? (darkSignUpUsernameInput != null ? darkSignUpUsernameInput.text.Trim() : "")
+      : (signUpUsernameInput != null ? signUpUsernameInput.text.Trim() : "");
+    string email = isDarkMode
+      ? (darkSignUpEmailInput != null ? darkSignUpEmailInput.text.Trim() : "")
+      : signUpEmailInput.text.Trim();
+    string password = isDarkMode
+      ? (darkSignUpPasswordInput != null ? darkSignUpPasswordInput.text : "")
+      : signUpPasswordInput.text;
 
     if (string.IsNullOrWhiteSpace(username))
     {
       signUpErrorText.text = "Enter username";
+      if (darkSignUpErrorText != null) darkSignUpErrorText.text = "Enter username";
       return;
     }
     if (username.Length < 2)
     {
       signUpErrorText.text = "Username too short";
+      if (darkSignUpErrorText != null) darkSignUpErrorText.text = "Username too short";
       return;
     }
     if (username.Length > 8)
     {
       signUpErrorText.text = "Username too long";
+      if (darkSignUpErrorText != null) darkSignUpErrorText.text = "Username too long";
       return;
     }
 
     if (!ValidateInput(email, password, signUpErrorText)) return;
 
     signUpErrorText.text = "Creating account...";
+    if (darkSignUpErrorText != null) darkSignUpErrorText.text = "Creating account...";
     signUpButton.interactable = false;
+    if (darkSignUpButton != null) darkSignUpButton.interactable = false;
 
     var usernameCheck = await DatabaseManager.Instance.CheckUsernameExists(username);
     if (!usernameCheck.Success)
     {
       signUpErrorText.text = "Error occurred";
+      if (darkSignUpErrorText != null) darkSignUpErrorText.text = "Error occurred";
       signUpButton.interactable = true;
+      if (darkSignUpButton != null) darkSignUpButton.interactable = true;
       return;
     }
     if (usernameCheck.Data)
     {
       signUpErrorText.text = "Username taken";
+      if (darkSignUpErrorText != null) darkSignUpErrorText.text = "Username taken";
       signUpButton.interactable = true;
+      if (darkSignUpButton != null) darkSignUpButton.interactable = true;
       return;
     }
 
@@ -439,17 +612,22 @@ public class AuthUIController : MonoBehaviour
     if (result.Success)
     {
       signUpErrorText.text = "Saving...";
+      if (darkSignUpErrorText != null) darkSignUpErrorText.text = "Saving...";
       await DatabaseManager.Instance.SaveUserData(result.Data.UserId, result.Data.Email, username);
 
       signUpErrorText.text = "Success!";
+      if (darkSignUpErrorText != null) darkSignUpErrorText.text = "Success!";
       await System.Threading.Tasks.Task.Delay(150);
       if (welcomeText != null) welcomeText.text = $"Welcome, {username}!";
+      if (darkWelcomeText != null) darkWelcomeText.text = $"Welcome, {username}!";
       ShowMenuPanel();
     }
     else
     {
       signUpErrorText.text = SimplifyError(result.ErrorMessage);
+      if (darkSignUpErrorText != null) darkSignUpErrorText.text = SimplifyError(result.ErrorMessage);
       signUpButton.interactable = true;
+      if (darkSignUpButton != null) darkSignUpButton.interactable = true;
     }
   }
 
@@ -488,12 +666,16 @@ public class AuthUIController : MonoBehaviour
     _hasEndScreenData = true;
   }
 
+  /// <summary>
+  /// Displays end screen with session results on both light and dark canvases
+  /// </summary>
   void ShowEndScreen()
   {
     if (_canvas != null) _canvas.enabled = true;
 
     HideAllPanels();
     if (endScreenPanel != null) endScreenPanel.SetActive(true);
+    if (darkEndScreenPanel != null) darkEndScreenPanel.SetActive(true);
 
     if (dateText != null)
     {
@@ -502,15 +684,29 @@ public class AuthUIController : MonoBehaviour
       else
         dateText.text = _completedAt;
     }
+    if (darkDateText != null)
+    {
+      if (DateTime.TryParse(_completedAt, out DateTime parsed))
+        darkDateText.text = parsed.ToLocalTime().ToString("MMM dd, yyyy - h:mm tt");
+      else
+        darkDateText.text = _completedAt;
+    }
     if (gradeText != null) gradeText.text = $"GRADE: {_grade}";
+    if (darkGradeText != null) darkGradeText.text = $"GRADE: {_grade}";
     if (scoreText != null) scoreText.text = $"{_finalScore} pts";
+    if (darkScoreText != null) darkScoreText.text = $"{_finalScore} pts";
     if (earningsText != null) earningsText.text = $"${_totalEarnings:F2}";
+    if (darkEarningsText != null) darkEarningsText.text = $"${_totalEarnings:F2}";
 
     int minutes = Mathf.FloorToInt(_totalTimeSeconds / 60);
     int seconds = Mathf.FloorToInt(_totalTimeSeconds % 60);
     if (statsText != null)
     {
       statsText.text = $"Time: {minutes}m {seconds}s    Orders: {_totalOrders}\nWaste: {_trashDisposed}";
+    }
+    if (darkStatsText != null)
+    {
+      darkStatsText.text = $"Time: {minutes}m {seconds}s    Orders: {_totalOrders}\nWaste: {_trashDisposed}";
     }
 
     if (playAgainButton != null)
@@ -553,35 +749,45 @@ public class AuthUIController : MonoBehaviour
     ShowLoginPanel();
   }
 
+  /// <summary>
+  /// Handles password reset using email from the active canvas (light or dark) and updates both canvases
+  /// </summary>
   async void OnResetClicked()
   {
-    if (forgotPasswordEmailInput == null)
+    if (forgotPasswordEmailInput == null && darkForgotPasswordEmailInput == null)
     {
       Debug.LogError("[AuthUI] Forgot password email input not assigned!");
       return;
     }
 
-    string email = forgotPasswordEmailInput.text.Trim();
+    string email = isDarkMode
+      ? (darkForgotPasswordEmailInput != null ? darkForgotPasswordEmailInput.text.Trim() : "")
+      : (forgotPasswordEmailInput != null ? forgotPasswordEmailInput.text.Trim() : "");
 
     if (!ValidateEmail(email, forgotPasswordErrorText)) return;
 
     forgotPasswordErrorText.text = "Sending...";
+    if (darkForgotPasswordErrorText != null) darkForgotPasswordErrorText.text = "Sending...";
     sendResetButton.interactable = false;
+    if (darkSendResetButton != null) darkSendResetButton.interactable = false;
 
     try
     {
       await global::Firebase.Auth.FirebaseAuth.DefaultInstance.SendPasswordResetEmailAsync(email);
       forgotPasswordErrorText.text = "Email sent! Check inbox.";
+      if (darkForgotPasswordErrorText != null) darkForgotPasswordErrorText.text = "Email sent! Check inbox.";
       await System.Threading.Tasks.Task.Delay(2000);
       ShowLoginPanel();
     }
     catch (System.Exception ex)
     {
       forgotPasswordErrorText.text = SimplifyError(ex.Message);
+      if (darkForgotPasswordErrorText != null) darkForgotPasswordErrorText.text = SimplifyError(ex.Message);
     }
     finally
     {
       sendResetButton.interactable = true;
+      if (darkSendResetButton != null) darkSendResetButton.interactable = true;
     }
   }
 
@@ -643,6 +849,9 @@ public class AuthUIController : MonoBehaviour
     return "Error occurred";
   }
 
+  /// <summary>
+  /// Clears all input fields and error texts on both light and dark canvases
+  /// </summary>
   void ClearAll()
   {
     if (loginEmailInput != null) loginEmailInput.text = "";
@@ -659,6 +868,21 @@ public class AuthUIController : MonoBehaviour
     if (loginButton != null) loginButton.interactable = true;
     if (signUpButton != null) signUpButton.interactable = true;
     if (sendResetButton != null) sendResetButton.interactable = true;
+
+    if (darkLoginEmailInput != null) darkLoginEmailInput.text = "";
+    if (darkLoginPasswordInput != null) darkLoginPasswordInput.text = "";
+    if (darkSignUpUsernameInput != null) darkSignUpUsernameInput.text = "";
+    if (darkSignUpEmailInput != null) darkSignUpEmailInput.text = "";
+    if (darkSignUpPasswordInput != null) darkSignUpPasswordInput.text = "";
+    if (darkForgotPasswordEmailInput != null) darkForgotPasswordEmailInput.text = "";
+
+    if (darkLoginErrorText != null) darkLoginErrorText.text = "";
+    if (darkSignUpErrorText != null) darkSignUpErrorText.text = "";
+    if (darkForgotPasswordErrorText != null) darkForgotPasswordErrorText.text = "";
+
+    if (darkLoginButton != null) darkLoginButton.interactable = true;
+    if (darkSignUpButton != null) darkSignUpButton.interactable = true;
+    if (darkSendResetButton != null) darkSendResetButton.interactable = true;
   }
 
   void OnDestroy()
@@ -678,5 +902,86 @@ public class AuthUIController : MonoBehaviour
     if (settingsBackButton != null) settingsBackButton.onClick.RemoveAllListeners();
     if (playAgainButton != null) playAgainButton.onClick.RemoveAllListeners();
     if (mainMenuButtonEndScreen != null) mainMenuButtonEndScreen.onClick.RemoveAllListeners();
+
+    if (darkLoginButton != null) darkLoginButton.onClick.RemoveAllListeners();
+    if (darkSignUpButton != null) darkSignUpButton.onClick.RemoveAllListeners();
+    if (darkSendResetButton != null) darkSendResetButton.onClick.RemoveAllListeners();
+    if (darkStartGameButton != null) darkStartGameButton.onClick.RemoveAllListeners();
+    if (darkCreditsButton != null) darkCreditsButton.onClick.RemoveAllListeners();
+    if (darkHandbookButton != null) darkHandbookButton.onClick.RemoveAllListeners();
+    if (darkSettingsButton != null) darkSettingsButton.onClick.RemoveAllListeners();
+    if (darkSignOutButton != null) darkSignOutButton.onClick.RemoveAllListeners();
+    if (darkBackToLoginButton != null) darkBackToLoginButton.onClick.RemoveAllListeners();
+    if (darkGuideBackButton != null) darkGuideBackButton.onClick.RemoveAllListeners();
+    if (darkHandbookBackButton != null) darkHandbookBackButton.onClick.RemoveAllListeners();
+    if (darkCreditBackButton != null) darkCreditBackButton.onClick.RemoveAllListeners();
+    if (darkSettingsBackButton != null) darkSettingsBackButton.onClick.RemoveAllListeners();
+    if (darkPlayAgainButton != null) darkPlayAgainButton.onClick.RemoveAllListeners();
+    if (darkMainMenuButtonEndScreen != null) darkMainMenuButtonEndScreen.onClick.RemoveAllListeners();
+    if (lightModeButton != null) lightModeButton.onClick.RemoveAllListeners();
+    if (darkModeButton != null) darkModeButton.onClick.RemoveAllListeners();
+    if (darkLightModeButton != null) darkLightModeButton.onClick.RemoveAllListeners();
+    if (darkDarkModeButton != null) darkDarkModeButton.onClick.RemoveAllListeners();
+  }
+
+  /// <summary>
+  /// Switches between light and dark canvas and saves preference
+  /// </summary>
+  private void SetTheme(bool dark)
+  {
+    isDarkMode = dark;
+    PlayerPrefs.SetInt(DarkModeKey, isDarkMode ? 1 : 0);
+    PlayerPrefs.Save();
+    ApplyTheme();
+  }
+
+  /// <summary>
+  /// Activates the correct canvas based on the current theme and deactivates the other
+  /// </summary>
+  private void ApplyTheme()
+  {
+    if (lightCanvas != null) lightCanvas.SetActive(!isDarkMode);
+    if (darkCanvas != null) darkCanvas.SetActive(isDarkMode);
+    Debug.Log($"[AuthUI] Theme: {(isDarkMode ? "Dark" : "Light")}");
+  }
+
+  /// <summary>
+  /// Hooks up all button listeners for theme toggle buttons on both canvases
+  /// </summary>
+  private void SetupThemeToggleButtons()
+  {
+    if (lightModeButton != null) lightModeButton.onClick.AddListener(() => SetTheme(false));
+    if (darkModeButton != null) darkModeButton.onClick.AddListener(() => SetTheme(true));
+    if (darkLightModeButton != null) darkLightModeButton.onClick.AddListener(() => SetTheme(false));
+    if (darkDarkModeButton != null) darkDarkModeButton.onClick.AddListener(() => SetTheme(true));
+  }
+
+  /// <summary>
+  /// Hooks up all button listeners for dark canvas UI elements
+  /// </summary>
+  private void SetupDarkCanvasListeners()
+  {
+    if (darkLoginButton != null) darkLoginButton.onClick.AddListener(OnLoginClicked);
+    if (darkSignUpButton != null) darkSignUpButton.onClick.AddListener(OnSignUpClicked);
+    if (darkSendResetButton != null) darkSendResetButton.onClick.AddListener(OnResetClicked);
+
+    if (darkStartGameButton != null) darkStartGameButton.onClick.AddListener(OnStartGameClicked);
+    if (darkCreditsButton != null) darkCreditsButton.onClick.AddListener(ShowCreditPanel);
+    if (darkHandbookButton != null) darkHandbookButton.onClick.AddListener(ShowHandbookPanel);
+    if (darkSettingsButton != null) darkSettingsButton.onClick.AddListener(ShowSettingsPanel);
+    if (darkSignOutButton != null) darkSignOutButton.onClick.AddListener(OnSignOutClicked);
+
+    if (darkGuideBackButton != null) darkGuideBackButton.onClick.AddListener(ShowMenuPanel);
+    if (darkHandbookBackButton != null) darkHandbookBackButton.onClick.AddListener(ShowMenuPanel);
+    if (darkCreditBackButton != null) darkCreditBackButton.onClick.AddListener(ShowMenuPanel);
+    if (darkSettingsBackButton != null) darkSettingsBackButton.onClick.AddListener(ShowMenuPanel);
+
+    MakeTextClickableWithButton(darkGoToSignUpText, ShowSignUpPanel);
+    MakeTextClickableWithButton(darkGoToLoginText, ShowLoginPanel);
+    MakeTextClickableWithButton(darkForgotPasswordText, ShowForgotPasswordPanel);
+    if (darkBackToLoginButton != null) darkBackToLoginButton.onClick.AddListener(ShowLoginPanel);
+
+    if (darkMusicVolumeSlider != null && AudioManager.Instance != null)
+      AudioManager.Instance.InitSlider(darkMusicVolumeSlider);
   }
 }

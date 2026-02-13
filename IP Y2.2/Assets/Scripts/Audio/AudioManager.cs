@@ -21,7 +21,7 @@ public class AudioManager : MonoBehaviour
   [SerializeField] private AudioClip rainClip;
 
   [Header("Volume Tuning")]
-  [SerializeField][Range(0f, 1f)] private float bgmMaxVolume = 0.4f;
+  [SerializeField][Range(0f, 1f)] private float bgmMaxVolume = 0.5f;
   [SerializeField][Range(0f, 1f)] private float rainMaxVolume = 1f;
 
   [Header("Crossfade")]

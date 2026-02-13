@@ -149218,7 +149218,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0ff17a95d6f8cb468e1d7d66fd554bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MenuSetupBootstrap
-  menuSetupPrefab: {fileID: 3205846796160349730, guid: 702941122bb69db429397d6acbb23add, type: 3}
+  menuSetupPrefab: {fileID: 8594282451274824405, guid: 702941122bb69db429397d6acbb23add, type: 3}
 --- !u!4 &2138233830
 Transform:
   m_ObjectHideFlags: 0
