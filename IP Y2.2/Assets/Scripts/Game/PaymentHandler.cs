@@ -1,3 +1,8 @@
+/// <summary>
+/// File: PaymentHandler.cs
+/// Author: Jayden Wong
+/// Description: Orchestrates the payment phase by calculating order totals, spawning customer money, and validating change.
+/// </summary>
 using UnityEngine;
 using System.Collections;
 
@@ -38,6 +43,9 @@ public class PaymentHandler : MonoBehaviour
     }
   }
 
+  /// <summary>
+  /// Initiates the payment phase by calculating the order total, determining customer payment, and spawning money
+  /// </summary>
   public void StartPaymentPhase()
   {
     if (orderBubbleController == null || ItemPrices.Instance == null)
@@ -89,6 +97,7 @@ public class PaymentHandler : MonoBehaviour
     SpawnCustomerPayment();
   }
 
+  // 70% chance of $5 for orders under $5, otherwise always $10
   private float DetermineCustomerPayment(float orderTotal)
   {
     if (orderTotal < 5f)
@@ -128,6 +137,9 @@ public class PaymentHandler : MonoBehaviour
     return moneyPrefabs[0];
   }
 
+  /// <summary>
+  /// Called by PaymentCollector when the player picks up the customer's payment
+  /// </summary>
   public void OnPaymentReceived(float amount)
   {
     if (paymentReceived) return;
@@ -147,13 +159,16 @@ public class PaymentHandler : MonoBehaviour
     }
   }
 
+  /// <summary>
+  /// Called by TrayValidator when the player places change on the tray
+  /// </summary>
   public void OnChangeValidated(bool correct, float givenAmount)
   {
     if (correct)
     {
       if (changeGiven) return;
 
-      Debug.Log("✓ Correct change given!");
+      Debug.Log("Correct change given!");
       changeGiven = true;
       givenChangeAmount = givenAmount;
 
@@ -172,7 +187,7 @@ public class PaymentHandler : MonoBehaviour
         {
           orderProgressUI.ShowPaymentMessage("Not enough change!", currentOrderTotal, customerPayment);
         }
-        Debug.Log("✗ Not enough change given!");
+        Debug.Log("Not enough change given!");
       }
       else
       {
@@ -180,7 +195,7 @@ public class PaymentHandler : MonoBehaviour
         {
           orderProgressUI.ShowPaymentMessage("Too much change!", currentOrderTotal, customerPayment);
         }
-        Debug.Log("✗ Too much change given!");
+        Debug.Log("Too much change given!");
       }
     }
   }
@@ -191,6 +206,7 @@ public class PaymentHandler : MonoBehaviour
     {
       if (EarningsTracker.Instance != null)
       {
+        // Deduct any overpayment from profit so player doesn't benefit from giving too much change
         float overpayment = Mathf.Max(0f, givenChangeAmount - requiredChange);
         float actualProfit = currentOrderTotal - overpayment;
         EarningsTracker.Instance.AddProfit(actualProfit);
@@ -250,6 +266,9 @@ public class PaymentHandler : MonoBehaviour
     Debug.Log("Transaction complete - customer leaving");
   }
 
+  /// <summary>
+  /// Returns the amount of change the player needs to give back
+  /// </summary>
   public float GetRequiredChange()
   {
     return requiredChange;

@@ -1,3 +1,8 @@
+/// <summary>
+/// File: OrderBubbleController.cs
+/// Author: Jayden Wong
+/// Description: Generates randomized food and drink orders using a shuffled bag system with anti-repeat guardrails.
+/// </summary>
 using UnityEngine;
 using TMPro;
 using System.Collections;
@@ -15,7 +20,6 @@ public class OrderBubbleController : MonoBehaviour
   [SerializeField] private TextMeshProUGUI textDisplay;
 
   [Header("Menu Items")]
-  // Unified food pool: IDs 0-3 = Fruits, IDs 4-5 = Bentos
   [SerializeField] private string[] foodNames = { "Apple", "Banana", "Orange", "Strawberry", "Bento Set 1", "Bento Set 2" };
   [SerializeField] private string[] drinkNames = { "Blueberry Tea", "Green Tea" };
 
@@ -31,66 +35,54 @@ public class OrderBubbleController : MonoBehaviour
   };
 
   [Header("Settings")]
-  [SerializeField] private float typingSpeed = 0.05f; // Lower is faster
+  [SerializeField] private float typingSpeed = 0.05f;
 
-  // PUBLIC VARIABLES (Your Stock Script will read these later!)
   [HideInInspector] public int requiredFoodID;
-  [HideInInspector] public int requiredFoodQuantity;  // Fruit: 1-3, Bento: always 1
+  [HideInInspector] public int requiredFoodQuantity;
   [HideInInspector] public int requiredDrinkID;
-  [HideInInspector] public int requiredDrinkQuantity; // Always 1-2
+  [HideInInspector] public int requiredDrinkQuantity;
 
   private Coroutine typingCoroutine;
 
-  // Cached allocations for typewriter effect
   private StringBuilder typingBuilder = new StringBuilder(64);
   private WaitForSeconds typingWait;
 
-  // --- SHUFFLED BAG SYSTEM ---
   private List<int> foodDeck = new List<int>();
   private List<int> drinkDeck = new List<int>();
   private List<int> paymentDeck = new List<int>();
 
-  // --- FOOD HISTORY (tracks last 2 draws) ---
-  private int lastFoodID1 = -1;   // Most recent food ID drawn
-  private int lastFoodID2 = -1;   // Second most recent food ID drawn
-  private int lastFoodCat1 = -1;  // Most recent food category (0 = Fruit, 1 = Bento)
-  private int lastFoodCat2 = -1;  // Second most recent food category
+  private int lastFoodID1 = -1;
+  private int lastFoodID2 = -1;
+  private int lastFoodCat1 = -1;
+  private int lastFoodCat2 = -1;
 
-  // --- DRINK HISTORY (tracks last 2 draws) ---
   private int lastDrink1 = -1;
   private int lastDrink2 = -1;
-  // --- END BAG SYSTEM VARS ---
 
-  // The boundary ID: anything below this is a Fruit, anything at or above is a Bento
+  // IDs at or above this are Bento items, below are Fruits
   private const int BENTO_START_ID = 4;
 
-  // Tracks whether the first post-milestone bento order has been forced
   private bool _bentoIntroduced = false;
 
   private void Start()
   {
-    // Fallback: If you forgot to drag it in, try to find it automatically
     if (mainCamera == null)
     {
       mainCamera = Camera.main;
     }
 
-    // CRITICAL ERROR CHECK
     if (mainCamera == null)
     {
       Debug.LogError("CRITICAL ERROR: OrderBubbleController cannot find the VR Camera! Please drag your Main Camera into the 'Main Camera' slot in the Inspector.");
     }
 
-    // Hide bubble immediately on start
     if (bubbleVisuals != null) bubbleVisuals.SetActive(false);
 
-    // Cache the WaitForSeconds used in typewriter effect
     typingWait = new WaitForSeconds(typingSpeed);
 
-    // --- Initialize and shuffle both decks on Start ---
-    RebuildFoodDeck();                               // 4 or 6 cards depending on earnings
-    RebuildAndShuffle(drinkDeck, drinkNames.Length); // 2 cards: [0,1]
-    RebuildAndShuffle(paymentDeck, paymentPhrases.Length); // 5 cards: [0,1,2,3,4]
+    RebuildFoodDeck();
+    RebuildAndShuffle(drinkDeck, drinkNames.Length);
+    RebuildAndShuffle(paymentDeck, paymentPhrases.Length);
   }
 
   private void Update()
@@ -99,84 +91,73 @@ public class OrderBubbleController : MonoBehaviour
     transform.rotation = Quaternion.LookRotation(mainCamera.transform.position - transform.position);
   }
 
-  // Call this from QueueManager when student arrives at Spot 1
+  /// <summary>
+  /// Generates a new randomized food and drink order and displays it with a typewriter effect
+  /// </summary>
   public void GenerateNewOrder()
   {
-    // 1. Draw food and drink IDs using shuffled bag guardrails
     int foodIndex = DrawFood();
     int drinkIndex = DrawFromDeck(drinkDeck, drinkNames.Length, ref lastDrink1, ref lastDrink2);
 
-    // 2. Roll quantities based on category
-    //    Fruit  -> 1 to 3
-    //    Bento  -> always 1
-    //    Drink  -> 1 to 2
     switch (foodIndex)
     {
-      case 0: // Apple
-      case 1: // Banana
-        requiredFoodQuantity = Random.Range(1, 4); // 1-3
+      case 0:
+      case 1:
+        requiredFoodQuantity = Random.Range(1, 4);
         break;
-      case 2: // Orange
-      case 3: // Strawberry
-        requiredFoodQuantity = Random.Range(2, 4); // 2-3
+      case 2:
+      case 3:
+        requiredFoodQuantity = Random.Range(2, 4);
         break;
-      case 4: // Bento Set 1
-      case 5: // Bento Set 2
+      case 4:
+      case 5:
       default:
         requiredFoodQuantity = 1;
         break;
     }
-    requiredDrinkQuantity = Random.Range(1, 3);                            // Drink: 1-2
+    requiredDrinkQuantity = Random.Range(1, 3);
 
-    // 3. Save IDs for Stock System
     requiredFoodID = foodIndex;
     requiredDrinkID = drinkIndex;
 
-    // 4. Construct the Sentence
     string fullSentence = $"I would like:\n{requiredFoodQuantity} {foodNames[foodIndex]}\n{requiredDrinkQuantity} {drinkNames[drinkIndex]}";
 
-    // 5. Start Visuals
     if (typingCoroutine != null) StopCoroutine(typingCoroutine);
     typingCoroutine = StartCoroutine(TypewriterEffect(fullSentence));
   }
 
+  /// <summary>
+  /// Displays a payment phrase with the given amount using a typewriter effect
+  /// </summary>
   public void ShowPayment(float amount)
   {
-    // If deck is empty, refill and shuffle all 5 indices
     if (paymentDeck.Count == 0)
     {
       RebuildAndShuffle(paymentDeck, paymentPhrases.Length);
     }
 
-    // Draw the first card (index) from the shuffled deck
     int phraseIndex = paymentDeck[0];
     paymentDeck.RemoveAt(0);
 
-    // Build the payment text: phrase + formatted dollar amount
     string paymentText = paymentPhrases[phraseIndex] + amount.ToString("F2") + ".";
 
-    // Display with typewriter effect
     if (typingCoroutine != null) StopCoroutine(typingCoroutine);
     typingCoroutine = StartCoroutine(TypewriterEffect(paymentText));
   }
 
-  // --- SHUFFLED BAG METHODS ---
-
-  // Fills the food deck, excluding bento IDs when earnings < $15
-  // When bentos are unlocked, each bento ID gets 2 copies for 50/50 weighting
-  // Locked:   [0,1,2,3]             = 4 cards (fruits only)
-  // Unlocked: [0,1,2,3, 4,4, 5,5]  = 8 cards (50% bento, 50% fruit)
+  /// <summary>
+  /// Rebuilds the food deck, weighting bento items with 2 copies each once earnings reach $15
+  /// </summary>
   private void RebuildFoodDeck()
   {
     foodDeck.Clear();
     bool bentoUnlocked = EarningsTracker.Instance != null && EarningsTracker.Instance.CurrentProfit >= 15f;
 
-    // Always add fruits (1 copy each)
     for (int i = 0; i < BENTO_START_ID; i++) foodDeck.Add(i);
 
     if (bentoUnlocked)
     {
-      // Add bento IDs twice each for higher weighting
+      // Bento IDs get 2 copies each for 50/50 weighting against fruits
       for (int i = BENTO_START_ID; i < foodNames.Length; i++)
       {
         foodDeck.Add(i);
@@ -187,7 +168,6 @@ public class OrderBubbleController : MonoBehaviour
     FisherYatesShuffle(foodDeck);
   }
 
-  // Fills a deck with one copy of each ID (0 to count-1), then shuffles it
   private void RebuildAndShuffle(List<int> deck, int itemCount)
   {
     deck.Clear();
@@ -198,25 +178,25 @@ public class OrderBubbleController : MonoBehaviour
     FisherYatesShuffle(deck);
   }
 
-  // Fisher-Yates shuffle: the standard unbiased shuffle algorithm
   private void FisherYatesShuffle(List<int> deck)
   {
     for (int i = deck.Count - 1; i > 0; i--)
     {
-      int j = Random.Range(0, i + 1); // inclusive of i
+      int j = Random.Range(0, i + 1);
       int temp = deck[i];
       deck[i] = deck[j];
       deck[j] = temp;
     }
   }
 
-  // Returns 0 if the ID is a Fruit, 1 if it is a Bento
   private int GetFoodCategory(int foodID)
   {
     return foodID >= BENTO_START_ID ? 1 : 0;
   }
 
-  // --- FOOD DRAW: Two-layer guardrail ---
+  /// <summary>
+  /// Draws a food ID with two-layer guardrails preventing same item or same category three times in a row
+  /// </summary>
   private int DrawFood()
   {
     // Guaranteed bento on the first order after milestone unlock
@@ -224,12 +204,11 @@ public class OrderBubbleController : MonoBehaviour
     if (bentoUnlocked && !_bentoIntroduced)
     {
       _bentoIntroduced = true;
-      int introID = Random.Range(BENTO_START_ID, foodNames.Length); // 4 or 5
+      int introID = Random.Range(BENTO_START_ID, foodNames.Length);
       lastFoodID2 = lastFoodID1;
       lastFoodID1 = introID;
       lastFoodCat2 = lastFoodCat1;
       lastFoodCat1 = GetFoodCategory(introID);
-      // Rebuild deck now that bentos are unlocked (weighted)
       RebuildFoodDeck();
       return introID;
     }
@@ -287,7 +266,9 @@ public class OrderBubbleController : MonoBehaviour
     return forced;
   }
 
-  // --- DRINK DRAW: Single guardrail (exact ID only) ---
+  /// <summary>
+  /// Draws from a shuffled deck with a single guardrail preventing the same ID three times in a row
+  /// </summary>
   private int DrawFromDeck(List<int> deck, int itemCount, ref int last1, ref int last2)
   {
     if (deck.Count == 0)
@@ -317,9 +298,9 @@ public class OrderBubbleController : MonoBehaviour
     return drawn;
   }
 
-  // --- END SHUFFLED BAG METHODS ---
-
-  // The "Cool Typewriter" Logic — uses StringBuilder to avoid string allocations
+  /// <summary>
+  /// Displays text character by character using a StringBuilder to avoid string allocations
+  /// </summary>
   private IEnumerator TypewriterEffect(string sentence)
   {
     bubbleVisuals.SetActive(true);
@@ -334,7 +315,9 @@ public class OrderBubbleController : MonoBehaviour
     }
   }
 
-  // Call this when you successfully serve them
+  /// <summary>
+  /// Hides the order bubble and clears the displayed text
+  /// </summary>
   public void HideOrder()
   {
     if (typingCoroutine != null) StopCoroutine(typingCoroutine);

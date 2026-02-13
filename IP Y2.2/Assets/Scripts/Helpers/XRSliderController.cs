@@ -1,3 +1,8 @@
+/// <summary>
+/// File: XRSliderController.cs
+/// Author: Jayden Wong
+/// Description: Bridges XR grab interactions to a Unity UI Slider by converting hand movement delta to slider value.
+/// </summary>
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit;

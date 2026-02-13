@@ -1,3 +1,8 @@
+/// <summary>
+/// File: OrderProgress.cs
+/// Author: Jayden Wong
+/// Description: Displays real-time order progress UI showing food/drink counts and change given during payment.
+/// </summary>
 using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
@@ -32,11 +37,10 @@ public class OrderProgressUI : MonoBehaviour
   private bool paymentMode = false;
   private bool hasCollectedPayment = false;
 
-  // Dirty tracking to avoid rebuilding UI every frame
+  // Only rebuild UI text when counts actually change
   private int lastFoodCount = -1;
   private int lastDrinkCount = -1;
 
-  // Cached display names (computed once per order)
   private string cachedFoodDisplayName;
   private string cachedDrinkDisplayName;
 
@@ -65,6 +69,9 @@ public class OrderProgressUI : MonoBehaviour
     }
   }
 
+  /// <summary>
+  /// Shows the order progress panel and begins tracking tray items against the current order
+  /// </summary>
   public void ShowOrderProgress()
   {
     if (orderBubbleController == null) return;
@@ -80,13 +87,11 @@ public class OrderProgressUI : MonoBehaviour
     requiredDrinkTag = drinkTags[drinkID];
     requiredDrinkQuantity = orderBubbleController.requiredDrinkQuantity;
 
-    // Cache display names once per order
     cachedFoodDisplayName = requiredFoodTag == "Bento1" ? "Bento Set 1" :
                             requiredFoodTag == "Bento2" ? "Bento Set 2" : requiredFoodTag;
     cachedDrinkDisplayName = requiredDrinkTag == "GreenTea" ? "Green Tea" :
                              requiredDrinkTag == "Blueberry" ? "Blueberry Tea" : requiredDrinkTag;
 
-    // Reset dirty tracking so first UpdateProgressDisplay runs
     lastFoodCount = -1;
     lastDrinkCount = -1;
 
@@ -102,6 +107,9 @@ public class OrderProgressUI : MonoBehaviour
     UpdateProgressDisplay();
   }
 
+  /// <summary>
+  /// Switches the UI to payment mode showing total cost, payment received, and change tracking
+  /// </summary>
   public void ShowPaymentMessage(string message, float totalCost, float paymentReceived)
   {
     if (progressPanel != null) progressPanel.SetActive(true);
@@ -134,16 +142,22 @@ public class OrderProgressUI : MonoBehaviour
     }
   }
 
+  /// <summary>
+  /// Marks payment as collected and updates the UI color to indicate completion
+  /// </summary>
   public void OnPaymentCollected()
   {
     hasCollectedPayment = true;
-    
+
     if (drinkProgressText != null)
     {
       drinkProgressText.color = completeColor;
     }
   }
 
+  /// <summary>
+  /// Hides the progress panel and resets all tracking state
+  /// </summary>
   public void HideUI()
   {
     if (progressPanel != null) progressPanel.SetActive(false);

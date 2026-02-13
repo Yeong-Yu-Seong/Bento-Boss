@@ -1,3 +1,8 @@
+/// <summary>
+/// File: AudioManager.cs
+/// Author: Jayden Wong
+/// Description: Manages background music crossfading between scenes and rain ambience with persistent volume control.
+/// </summary>
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -92,10 +97,14 @@ public class AudioManager : MonoBehaviour
     crossfadeRoutine = StartCoroutine(CrossfadeBGM(targetClip));
   }
 
+  /// <summary>
+  /// Crossfades from current BGM to new clip over configured duration
+  /// </summary>
   IEnumerator CrossfadeBGM(AudioClip newClip)
   {
     float startVol = bgmSource.volume;
 
+    // Use unscaledDeltaTime so crossfade works even when Time.timeScale = 0
     for (float t = 0f; t < crossfadeDuration; t += Time.unscaledDeltaTime)
     {
       bgmSource.volume = Mathf.Lerp(startVol, 0f, t / crossfadeDuration);
@@ -117,6 +126,9 @@ public class AudioManager : MonoBehaviour
     crossfadeRoutine = null;
   }
 
+  /// <summary>
+  /// Sets master volume and persists to PlayerPrefs
+  /// </summary>
   public void SetVolume(float value)
   {
     currentVolume = value;
@@ -130,6 +142,9 @@ public class AudioManager : MonoBehaviour
     rainSource.volume = currentVolume * rainMaxVolume;
   }
 
+  /// <summary>
+  /// Initializes UI slider with current volume and binds value change event
+  /// </summary>
   public void InitSlider(Slider slider)
   {
     slider.value = currentVolume;

@@ -1,3 +1,8 @@
+/// <summary>
+/// File: Trayvalidator.cs
+/// Author: Jayden Wong
+/// Description: Validates tray contents against the current order, handles item snapping to sockets, and manages change collection during payment.
+/// </summary>
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using System.Collections;
@@ -84,7 +89,6 @@ public class TrayValidator : MonoBehaviour
   private Dictionary<GameObject, Coroutine> pendingSnaps = new Dictionary<GameObject, Coroutine>();
   private HashSet<GameObject> snappedItems = new HashSet<GameObject>();
 
-  // Per-order accuracy tracking
   private int correctFoodPlacements = 0;
   private int wrongFoodPlacements = 0;
   private bool wasChangeExact = true;
@@ -99,10 +103,8 @@ public class TrayValidator : MonoBehaviour
   private List<GameObject> collectedMoney = new List<GameObject>();
   private HashSet<GameObject> collectedMoneySet = new HashSet<GameObject>();
 
-  // Cached Rigidbody lookups
   private Dictionary<GameObject, Rigidbody> rbCache = new Dictionary<GameObject, Rigidbody>();
 
-  // O(1) money value lookup
   private static readonly Dictionary<string, float> moneyValues = new Dictionary<string, float>
     {
         { "Money_10Cent", 0.10f },
@@ -116,21 +118,33 @@ public class TrayValidator : MonoBehaviour
 
   public static TrayValidator Instance;
 
+  /// <summary>
+  /// Returns the current dictionary of item tags to their counts on the tray
+  /// </summary>
   public Dictionary<string, int> GetItemsOnTray()
   {
     return itemsOnTray;
   }
 
+  /// <summary>
+  /// Returns the total value of change coins currently on the tray
+  /// </summary>
   public float GetCollectedChange()
   {
     return collectedChange;
   }
 
+  /// <summary>
+  /// Returns whether the given object is a collected money item during payment phase
+  /// </summary>
   public bool IsMoneyCollected(GameObject obj)
   {
     return paymentPhase && collectedMoneySet.Contains(obj);
   }
 
+  /// <summary>
+  /// Resets all payment phase state including collected money tracking
+  /// </summary>
   public void ClearCollectedChange()
   {
     collectedMoney.Clear();
@@ -164,6 +178,9 @@ public class TrayValidator : MonoBehaviour
     }
   }
 
+  /// <summary>
+  /// Clears all state from the previous order and generates a new one
+  /// </summary>
   public void StartNewOrder()
   {
     CancelInvoke();
@@ -245,7 +262,6 @@ public class TrayValidator : MonoBehaviour
 
     string tag = itemObj.tag;
 
-    // Payment phase: detect money
     if (paymentPhase)
     {
       float moneyValue = GetMoneyValue(tag);
@@ -291,7 +307,6 @@ public class TrayValidator : MonoBehaviour
         Transform targetSocket = GetSocketForItem(tag, itemObj);
         if (targetSocket != null)
         {
-          // Only assign if this item doesn't already have a socket assignment
           if (!itemToSocket.ContainsKey(itemObj))
           {
             socketOccupancy[targetSocket] = itemObj;
@@ -331,7 +346,6 @@ public class TrayValidator : MonoBehaviour
     if (other.gameObject != itemObj) return;
     string tag = itemObj.tag;
 
-    // Handle money during payment phase
     if (paymentPhase && collectedMoneySet.Contains(itemObj))
     {
       XRGrabInteractable grab = itemObj.GetComponent<XRGrabInteractable>();
@@ -340,13 +354,12 @@ public class TrayValidator : MonoBehaviour
       Rigidbody moneyRb = GetCachedRigidbody(itemObj);
       bool isSettled = moneyRb != null && moneyRb.isKinematic;
 
-      // If settled on tray and not being held, ignore the exit
+      // If money is settled on tray and not being held, ignore the physics exit event
       if (!isBeingHeld && isSettled)
       {
         return;
       }
 
-      // Player is intentionally removing it — proceed with removal
       float moneyValue = GetMoneyValue(tag);
       if (moneyValue > 0f)
       {
@@ -367,11 +380,10 @@ public class TrayValidator : MonoBehaviour
 
     if (physicalItemsSet.Contains(itemObj))
     {
-      // If we are currently snapping this item and the user isn't holding it,
-      // ignore the exit — the item is mid-flight and will settle at the socket.
       XRGrabInteractable grab = itemObj.GetComponent<XRGrabInteractable>();
       bool isBeingHeld = grab != null && grab.isSelected;
 
+      // If item is mid-snap and not being held, ignore the exit — it will settle at the socket
       if (pendingSnaps.ContainsKey(itemObj) && !isBeingHeld)
       {
         return;
@@ -558,6 +570,9 @@ public class TrayValidator : MonoBehaviour
     }
   }
 
+  /// <summary>
+  /// Lerps an item to its assigned socket position over snapDelay, verifying ownership throughout
+  /// </summary>
   private IEnumerator SnapToSocketAfterDelay(GameObject item, Transform socket)
   {
     float elapsedTime = 0f;
@@ -571,7 +586,7 @@ public class TrayValidator : MonoBehaviour
         yield break;
       }
 
-      // Stop lerping if socket was reassigned to another item during animation
+      // Abort if socket was reassigned to another item during animation
       if (!socketOccupancy.TryGetValue(socket, out GameObject owner) || owner != item)
       {
         yield break;
@@ -588,7 +603,6 @@ public class TrayValidator : MonoBehaviour
 
     if (item != null)
     {
-      // Verify this socket still belongs to this item (not stolen during lerp)
       if (socketOccupancy.TryGetValue(socket, out GameObject finalOwner) && finalOwner == item)
       {
         item.transform.position = socket.position;
@@ -597,7 +611,6 @@ public class TrayValidator : MonoBehaviour
       }
       else
       {
-        // Socket stolen - just release the item
         Rigidbody rb = GetCachedRigidbody(item);
         if (rb != null)
         {
@@ -659,6 +672,9 @@ public class TrayValidator : MonoBehaviour
     }
   }
 
+  /// <summary>
+  /// Destroys all physical items on the tray and resets all socket/snap tracking state
+  /// </summary>
   public void ClearPhysicalItems()
   {
     foreach (var kvp in pendingSnaps)
@@ -690,6 +706,9 @@ public class TrayValidator : MonoBehaviour
     itemsOnTray.Clear();
   }
 
+  /// <summary>
+  /// Enters payment phase where the tray collects change coins from the player
+  /// </summary>
   public void StartPaymentPhase(float changeAmount)
   {
     paymentPhase = true;
@@ -724,6 +743,9 @@ public class TrayValidator : MonoBehaviour
     }
   }
 
+  /// <summary>
+  /// Called by PaymentCollector when the customer's payment has been picked up
+  /// </summary>
   public void OnPaymentCollected()
   {
     hasCollectedPayment = true;

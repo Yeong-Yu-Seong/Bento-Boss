@@ -1,3 +1,8 @@
+/// <summary>
+/// File: BootstrapPersistence.cs
+/// Author: Jayden Wong
+/// Description: Ensures the bootstrap GameObject persists across scene loads as a singleton.
+/// </summary>
 using UnityEngine;
 
 public class BootstrapPersistence : MonoBehaviour

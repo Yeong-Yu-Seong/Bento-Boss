@@ -1,3 +1,8 @@
+/// <summary>
+/// File: Authuicontroller.cs
+/// Author: Jayden Wong
+/// Description: Controls all menu UI panels including login, sign-up, handbook, settings, and end screen with Firebase integration.
+/// </summary>
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -56,11 +61,9 @@ public class AuthUIController : MonoBehaviour
   [SerializeField] private GameObject handbookPanel;
   [SerializeField] private Button handbookBackButton;
 
-  // Account Details (2 fields)
   [SerializeField] private TextMeshProUGUI handbookUsernameText;
   [SerializeField] private TextMeshProUGUI handbookEmailText;
 
-  // Aggregate Statistics (9 fields)
   [SerializeField] private TextMeshProUGUI handbookTotalPlaysText;
   [SerializeField] private TextMeshProUGUI handbookBestScoreText;
   [SerializeField] private TextMeshProUGUI handbookRecentScoreText;
@@ -93,7 +96,6 @@ public class AuthUIController : MonoBehaviour
   [Header("Settings")]
   [SerializeField] private string gameSceneName = "GameScene";
 
-  // End screen data storage (survives scene transitions via DontDestroyOnLoad)
   private bool _hasEndScreenData = false;
   private int _finalScore;
   private string _grade;
@@ -115,7 +117,6 @@ public class AuthUIController : MonoBehaviour
 
     _canvas = GetComponentInChildren<Canvas>();
 
-    // Check critical assignments
     if (loginPanel == null) Debug.LogError("[AuthUI] LoginPanel not assigned!");
     if (signUpPanel == null) Debug.LogError("[AuthUI] SignUpPanel not assigned!");
     if (forgotPasswordPanel == null) Debug.LogWarning("[AuthUI] ForgotPasswordPanel not assigned!");
@@ -138,42 +139,35 @@ public class AuthUIController : MonoBehaviour
 
   void Start()
   {
-    // Setup main buttons
     loginButton.onClick.AddListener(OnLoginClicked);
     signUpButton.onClick.AddListener(OnSignUpClicked);
     if (sendResetButton != null) sendResetButton.onClick.AddListener(OnResetClicked);
 
-    // Menu panel buttons
     if (startGameButton != null) startGameButton.onClick.AddListener(OnStartGameClicked);
     if (creditsButton != null) creditsButton.onClick.AddListener(ShowCreditPanel);
     if (handbookButton != null) handbookButton.onClick.AddListener(ShowHandbookPanel);
     if (settingsButton != null) settingsButton.onClick.AddListener(ShowSettingsPanel);
     if (signOutButton != null) signOutButton.onClick.AddListener(OnSignOutClicked);
 
-    // Back buttons
     if (guideBackButton != null) guideBackButton.onClick.AddListener(ShowMenuPanel);
     if (handbookBackButton != null) handbookBackButton.onClick.AddListener(ShowMenuPanel);
     if (creditBackButton != null) creditBackButton.onClick.AddListener(ShowMenuPanel);
     if (settingsBackButton != null) settingsBackButton.onClick.AddListener(ShowMenuPanel);
 
-    // Make text clickable by adding Button component automatically
     MakeTextClickableWithButton(goToSignUpText, ShowSignUpPanel);
     MakeTextClickableWithButton(goToLoginText, ShowLoginPanel);
     MakeTextClickableWithButton(forgotPasswordText, ShowForgotPasswordPanel);
     if (backToLoginButton != null) backToLoginButton.onClick.AddListener(ShowLoginPanel);
 
-    // Hook up volume slider to AudioManager
     if (musicVolumeSlider != null && AudioManager.Instance != null)
       AudioManager.Instance.InitSlider(musicVolumeSlider);
 
-    // Force show login panel
     ShowLoginPanel();
     Debug.Log("[AuthUI] Started - Login panel active");
   }
 
   /// <summary>
-  /// Makes text clickable by adding Button component instead of EventTrigger
-  /// This is more reliable and works better with Unity's UI system
+  /// Adds a transparent Button component to a TextMeshProUGUI element to make it clickable
   /// </summary>
   void MakeTextClickableWithButton(TextMeshProUGUI text, UnityEngine.Events.UnityAction action)
   {
@@ -183,7 +177,6 @@ public class AuthUIController : MonoBehaviour
       return;
     }
 
-    // Get or add Button component
     Button button = text.GetComponent<Button>();
     if (button == null)
     {
@@ -191,11 +184,10 @@ public class AuthUIController : MonoBehaviour
       Debug.Log($"[AuthUI] Added Button to '{text.gameObject.name}'");
     }
 
-    // Clear old listeners and add new one
     button.onClick.RemoveAllListeners();
     button.onClick.AddListener(action);
 
-    // Make button transparent (we only see the text)
+    // Use no transition so only the text is visible, not a button background
     button.transition = Selectable.Transition.None;
 
     Debug.Log($"[AuthUI] Made '{text.gameObject.name}' clickable");
@@ -266,12 +258,11 @@ public class AuthUIController : MonoBehaviour
     HideAllPanels();
     if (handbookPanel != null) handbookPanel.SetActive(true);
 
-    // Populate with Firebase data
     await PopulateHandbookData();
   }
 
   /// <summary>
-  /// Fetches user data and aggregate statistics from Firebase and populates the Handbook UI
+  /// Fetches user data and aggregate statistics from Firebase to populate the Handbook UI
   /// </summary>
   private async Task PopulateHandbookData()
   {
@@ -282,7 +273,6 @@ public class AuthUIController : MonoBehaviour
       return;
     }
 
-    // Fetch user account details
     var userDataResult = await DatabaseManager.Instance.GetUserData(userId);
     if (userDataResult.Success && userDataResult.Data != null)
     {
@@ -297,45 +287,35 @@ public class AuthUIController : MonoBehaviour
       Debug.LogWarning($"[AuthUI] Failed to load user data: {userDataResult.ErrorMessage}");
     }
 
-    // Fetch aggregate statistics
     var statsResult = await DatabaseManager.Instance.GetAggregateStats(userId);
     if (statsResult.Success && statsResult.Data != null)
     {
       var stats = statsResult.Data;
 
-      // Total Plays
       if (handbookTotalPlaysText != null)
         handbookTotalPlaysText.text = $"Total Plays: {stats.totalSessions}";
 
-      // Best Score
       if (handbookBestScoreText != null)
         handbookBestScoreText.text = $"Best Score: {stats.bestScore}";
 
-      // Recent Score
       if (handbookRecentScoreText != null)
         handbookRecentScoreText.text = $"Recent Score: {stats.recentScore}";
 
-      // Best Grade
       if (handbookBestGradeText != null)
         handbookBestGradeText.text = $"Best Grade: {stats.bestGrade}";
 
-      // Orders Completed
       if (handbookOrdersCompletedText != null)
         handbookOrdersCompletedText.text = $"Orders Completed: {stats.totalOrdersCompleted}";
 
-      // Order Accuracy (Food Accuracy)
       if (handbookOrderAccuracyText != null)
         handbookOrderAccuracyText.text = $"Order Accuracy: {stats.foodAccuracyPercent:F1}%";
 
-      // Change Accuracy
       if (handbookChangeAccuracyText != null)
         handbookChangeAccuracyText.text = $"Change Accuracy: {stats.changeAccuracyPercent:F1}%";
 
-      // Highest Balance
       if (handbookHighestBalanceText != null)
         handbookHighestBalanceText.text = $"Highest Balance: ${stats.highestBalance:F2}";
 
-      // Play Time (formatted as "Xh Ym" or "Ym")
       if (handbookPlayTimeText != null)
         handbookPlayTimeText.text = $"Play Time: {stats.GetFormattedPlaytime()}";
 
@@ -345,7 +325,6 @@ public class AuthUIController : MonoBehaviour
     {
       Debug.LogWarning($"[AuthUI] Failed to load aggregate stats: {statsResult.ErrorMessage}");
 
-      // Show zeros if no data
       if (handbookTotalPlaysText != null) handbookTotalPlaysText.text = "Total Plays: 0";
       if (handbookBestScoreText != null) handbookBestScoreText.text = "Best Score: 0";
       if (handbookRecentScoreText != null) handbookRecentScoreText.text = "Recent Score: 0";
@@ -377,14 +356,12 @@ public class AuthUIController : MonoBehaviour
     string email = loginEmailInput.text.Trim();
     string password = loginPasswordInput.text;
 
-    // Check if fields are empty
     if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
     {
       loginErrorText.text = "Enter email and password";
       return;
     }
 
-    // Basic email format check
     if (!email.Contains("@") || !email.Contains("."))
     {
       loginErrorText.text = "Invalid email format";
@@ -422,7 +399,6 @@ public class AuthUIController : MonoBehaviour
     string email = signUpEmailInput.text.Trim();
     string password = signUpPasswordInput.text;
 
-    // Validate username
     if (string.IsNullOrWhiteSpace(username))
     {
       signUpErrorText.text = "Enter username";
@@ -444,7 +420,6 @@ public class AuthUIController : MonoBehaviour
     signUpErrorText.text = "Creating account...";
     signUpButton.interactable = false;
 
-    // Check username uniqueness
     var usernameCheck = await DatabaseManager.Instance.CheckUsernameExists(username);
     if (!usernameCheck.Success)
     {
@@ -498,6 +473,9 @@ public class AuthUIController : MonoBehaviour
     }
   }
 
+  /// <summary>
+  /// Stores end-of-session data that survives the scene transition back to MenuScene
+  /// </summary>
   public void SetEndScreenData(int score, string grade, float earnings, float timeSeconds, int orders, int waste, string completedAt)
   {
     _finalScore = score;
@@ -512,7 +490,6 @@ public class AuthUIController : MonoBehaviour
 
   void ShowEndScreen()
   {
-    // Re-enable Canvas (was hidden during GameScene)
     if (_canvas != null) _canvas.enabled = true;
 
     HideAllPanels();

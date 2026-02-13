@@ -1,10 +1,11 @@
+/// <summary>
+/// File: PlayerSpawn.cs
+/// Author: Jayden Wong
+/// Description: Moves the XR Origin to the spawn point, compensating for headset camera offset and rotation.
+/// </summary>
 using UnityEngine;
 using Unity.XR.CoreUtils;
 
-/// <summary>
-/// Moves the XR Origin to the spawn point. 
-/// Handles cases where no headset is present to prevent NaN transform corruption.
-/// </summary>
 [DefaultExecutionOrder(100)]
 public class PlayerSpawn : MonoBehaviour
 {
@@ -30,18 +31,15 @@ public class PlayerSpawn : MonoBehaviour
 
   private void ExecuteSpawn(XROrigin xrOrigin, Camera cam)
   {
-    // If data is invalid/NaN, default to zero offset to prevent UI Frustum errors.
+    // Default to zero offset if camera data is NaN to prevent UI Frustum errors
     Vector3 camLocalPos = cam.transform.localPosition;
     if (float.IsNaN(camLocalPos.x)) camLocalPos = Vector3.zero;
 
-    // Calculate horizontal offset
     Vector3 rigToHeadOffset = cam.transform.TransformDirection(camLocalPos);
     rigToHeadOffset.y = 0f;
 
-    // Apply Position
     xrOrigin.transform.position = transform.position - rigToHeadOffset;
 
-    // Apply Rotation
     ApplyCorrectedRotation(xrOrigin, cam);
   }
 

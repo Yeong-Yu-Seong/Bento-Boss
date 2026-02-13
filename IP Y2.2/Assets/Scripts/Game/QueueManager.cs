@@ -1,3 +1,8 @@
+/// <summary>
+/// File: QueueManager.cs
+/// Author: Jayden Wong
+/// Description: Manages a circular queue of student NPCs walking between waypoints and triggering orders at the front.
+/// </summary>
 using UnityEngine;
 using System.Collections;
 
@@ -94,6 +99,9 @@ public class QueueManager : MonoBehaviour
     }
   }
 
+  /// <summary>
+  /// Rotates all students to their next waypoint in the circular queue
+  /// </summary>
   public void ShiftQueue()
   {
     for (int i = 0; i < students.Length; i++)

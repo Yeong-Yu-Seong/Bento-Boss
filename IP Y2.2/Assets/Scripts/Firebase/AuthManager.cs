@@ -1,3 +1,8 @@
+/// <summary>
+/// File: AuthManager.cs
+/// Author: Jayden Wong
+/// Description: Handles Firebase user registration, login, and sign-out with error parsing.
+/// </summary>
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -6,9 +11,6 @@ using Firebase.Auth;
 
 namespace BentoBoss.FirebaseManagers
 {
-  /// <summary>
-  /// Handles user registration and login
-  /// </summary>
   public class AuthManager : MonoBehaviour
   {
     public static AuthManager Instance { get; private set; }
@@ -35,8 +37,7 @@ namespace BentoBoss.FirebaseManagers
     }
 
     /// <summary>
-    /// Register new user with email and password
-    /// Minimum 6 characters for password (Firebase requirement)
+    /// Registers a new user with email and password (minimum 6 characters)
     /// </summary>
     public async Task<FirebaseResult<FirebaseUser>> Register(string email, string password)
     {
@@ -66,7 +67,7 @@ namespace BentoBoss.FirebaseManagers
     }
 
     /// <summary>
-    /// Login existing user
+    /// Signs in an existing user with email and password
     /// </summary>
     public async Task<FirebaseResult<FirebaseUser>> Login(string email, string password)
     {
@@ -92,6 +93,9 @@ namespace BentoBoss.FirebaseManagers
       }
     }
 
+    /// <summary>
+    /// Signs out the current user
+    /// </summary>
     public void SignOut()
     {
       _auth?.SignOut();

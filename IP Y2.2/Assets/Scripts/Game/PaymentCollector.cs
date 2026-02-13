@@ -1,3 +1,8 @@
+/// <summary>
+/// File: PaymentCollector.cs
+/// Author: Jayden Wong
+/// Description: Detects customer payment money entering the trigger zone and forwards the amount to PaymentHandler.
+/// </summary>
 using UnityEngine;
 using System.Collections.Generic;
 

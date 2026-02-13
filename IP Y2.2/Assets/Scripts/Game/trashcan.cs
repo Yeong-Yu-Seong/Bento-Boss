@@ -1,23 +1,26 @@
+/// <summary>
+/// File: trashcan.cs
+/// Author: Jayden Wong
+/// Description: Detects items tagged as Trash entering the trigger and delegates disposal to the stock manager.
+/// </summary>
 using UnityEngine;
 
 public class TrashCan : MonoBehaviour
 {
-    public InventoryStockDisplay stockManager;
-    
-    void OnTriggerEnter(Collider other)
+  public InventoryStockDisplay stockManager;
+
+  void OnTriggerEnter(Collider other)
+  {
+    if (other.CompareTag("Trash"))
     {
-        // Check if the object has the "Trash" tag
-        if (other.CompareTag("Trash"))
-        {
-            if (stockManager != null)
-            {
-                stockManager.DisposeTrash(other.gameObject);
-            }
-            else
-            {
-                // If no stock manager, just destroy it
-                Destroy(other.gameObject);
-            }
-        }
+      if (stockManager != null)
+      {
+        stockManager.DisposeTrash(other.gameObject);
+      }
+      else
+      {
+        Destroy(other.gameObject);
+      }
     }
+  }
 }

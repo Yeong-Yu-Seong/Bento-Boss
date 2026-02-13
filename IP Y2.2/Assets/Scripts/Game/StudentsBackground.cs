@@ -1,3 +1,8 @@
+/// <summary>
+/// File: StudentsBackground.cs
+/// Author: Jayden Wong
+/// Description: Controls background student NPC wandering using NavMesh with smart crowd-avoidance destination selection.
+/// </summary>
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -6,7 +11,7 @@ public class StudentsBackground : MonoBehaviour
 {
   [Header("Wander Settings")]
   [Tooltip("How far the student can walk from their starting point")]
-  [SerializeField] private float wanderRadius = 15f; // Increased slightly to encourage spreading
+  [SerializeField] private float wanderRadius = 15f;
 
   [Tooltip("How long to wait at destination before walking again")]
   [SerializeField] private float waitTime = 1.5f;
@@ -45,7 +50,7 @@ public class StudentsBackground : MonoBehaviour
     _agent.radius = 0.25f;
     _agent.speed = 2.0f;
 
-    // Anti-Jam Priority
+    // Randomize priority so agents don't deadlock when avoiding each other
     _agent.avoidancePriority = Random.Range(30, 70);
   }
 
@@ -56,7 +61,6 @@ public class StudentsBackground : MonoBehaviour
     if (_animator != null)
       _animator.SetBool(WalkingParam, isMoving);
 
-    // Stuck Detection
     if (!isMoving && _agent.hasPath && _agent.remainingDistance > _agent.stoppingDistance)
     {
       _stuckTimer += Time.deltaTime;
@@ -71,7 +75,6 @@ public class StudentsBackground : MonoBehaviour
       _stuckTimer = 0;
     }
 
-    // Arrival Logic
     if (!_agent.pathPending && _agent.remainingDistance <= _agent.stoppingDistance)
     {
       _waitTimer += Time.deltaTime;
@@ -83,6 +86,9 @@ public class StudentsBackground : MonoBehaviour
     }
   }
 
+  /// <summary>
+  /// Samples multiple random NavMesh positions and picks the one with the fewest nearby students
+  /// </summary>
   private void SetNewDestination()
   {
     Vector3 bestCandidate = transform.position;
@@ -90,22 +96,15 @@ public class StudentsBackground : MonoBehaviour
     float furthestDistFromMe = 0f;
     bool foundValid = false;
 
-    // --- THE SMART LOGIC ---
-    // Instead of trying 5 times to find *any* valid spot,
-    // We generate 'intelligenceSamples' spots and pick the BEST one.
     for (int i = 0; i < intelligenceSamples; i++)
     {
       Vector3 candidatePos = RandomNavSphere(transform.position, wanderRadius, -1);
 
-      // 1. HARD CHECK: Is this spot physically blocked by someone standing there?
       if (IsCrowded(candidatePos)) continue;
 
-      // 2. SOFT CHECK: How busy is the general area?
       int neighborCount = CountNeighbors(candidatePos, densityScanRadius);
 
-      // 3. SCORING:
-      // We prefer the spot with the FEWEST neighbors.
-      // Tie-breaker: If two spots are equally empty, pick the one furthest from my current spot.
+      // Prefer fewest neighbors; tie-break by furthest distance for better spreading
       if (neighborCount < lowestNeighborCount)
       {
         lowestNeighborCount = neighborCount;
@@ -124,40 +123,33 @@ public class StudentsBackground : MonoBehaviour
       }
     }
 
-    // If we found a calculated best spot, go there.
     if (foundValid)
     {
       _agent.SetDestination(bestCandidate);
     }
     else
     {
-      // Fallback: Just pick a random point if we are totally hemmed in
       _agent.SetDestination(RandomNavSphere(transform.position, wanderRadius, -1));
     }
   }
 
-  // Checks if a specific spot is literally taken (Personal Space)
   private bool IsCrowded(Vector3 targetPos)
   {
-    // Check smaller radius just for collision prevention
     Collider[] hitColliders = Physics.OverlapSphere(targetPos, personalSpace, studentLayer);
     foreach (var hit in hitColliders)
     {
-      if (hit.gameObject != gameObject) return true; // It's crowded by someone else
+      if (hit.gameObject != gameObject) return true;
     }
     return false;
   }
 
-  // Counts how many agents are in the general area (Social Density)
   private int CountNeighbors(Vector3 targetPos, float radius)
   {
     int count = 0;
-    // Check larger radius for social density
     Collider[] hitColliders = Physics.OverlapSphere(targetPos, radius, studentLayer);
 
     foreach (var hit in hitColliders)
     {
-      // If it's a student and not ME, add to count
       if (hit.gameObject != gameObject)
       {
         count++;

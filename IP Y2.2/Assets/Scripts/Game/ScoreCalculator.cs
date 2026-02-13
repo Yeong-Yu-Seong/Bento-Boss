@@ -1,10 +1,10 @@
+/// <summary>
+/// File: ScoreCalculator.cs
+/// Author: Jayden Wong
+/// Description: Pure static score calculator using food accuracy, change accuracy, speed bonus, and waste penalty.
+/// </summary>
 using UnityEngine;
 
-/// <summary>
-/// Pure static score calculator — no MonoBehaviour needed.
-/// Formula: Food Score (0-500) + Change Score (0-500) + Speed Bonus (0-200) - Waste Penalty (25 per trash).
-/// Max possible: 1200. Floor: 0.
-/// </summary>
 public static class ScoreCalculator
 {
   private const float FOOD_MAX = 500f;
@@ -24,20 +24,21 @@ public static class ScoreCalculator
     public string grade;
   }
 
+  /// <summary>
+  /// Calculates the final score from accuracy, speed, and waste metrics and assigns a letter grade
+  /// </summary>
   public static ScoreResult Calculate(int foodCorrect, int foodWrong,
       int changeCorrect, int changeWrong, float timeSeconds, int trashDisposed)
   {
     int totalOrders = foodCorrect + foodWrong;
 
-    // Food accuracy score (0-500)
     float foodAccuracy = totalOrders > 0 ? (float)foodCorrect / totalOrders : 0f;
     float rawFood = foodAccuracy * FOOD_MAX;
 
-    // Change accuracy score (0-500)
     float changeAccuracy = totalOrders > 0 ? (float)changeCorrect / totalOrders : 0f;
     float rawChange = changeAccuracy * CHANGE_MAX;
 
-    // Speed bonus (0-200): full at <=5min, linear falloff to 0 at 10min
+    // Full speed bonus at <=7min, linear falloff to 0 at 15min
     float rawSpeed;
     if (timeSeconds <= SPEED_FULL_THRESHOLD)
     {
@@ -52,10 +53,8 @@ public static class ScoreCalculator
       rawSpeed = 0f;
     }
 
-    // Waste penalty
     float rawWaste = trashDisposed * WASTE_PENALTY_PER_ITEM;
 
-    // Final score (floored at 0)
     int foodScore = Mathf.RoundToInt(rawFood);
     int changeScore = Mathf.RoundToInt(rawChange);
     int speedBonus = Mathf.RoundToInt(rawSpeed);

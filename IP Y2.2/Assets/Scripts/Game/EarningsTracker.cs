@@ -1,3 +1,8 @@
+/// <summary>
+/// File: EarningsTracker.cs
+/// Author: Jayden Wong
+/// Description: Tracks player profit, updates the earnings UI with a progress slider, and triggers session end on goal reached.
+/// </summary>
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
@@ -65,7 +70,6 @@ public class EarningsTracker : MonoBehaviour
     if (Mathf.Approximately(_currentProfit, _lastValidatedProfit)) return;
     _lastValidatedProfit = _currentProfit;
 
-    // Defer to next frame — OnValidate can't call SendMessage
     UnityEditor.EditorApplication.delayCall += () =>
     {
       if (this == null) return;
@@ -95,6 +99,9 @@ public class EarningsTracker : MonoBehaviour
     UpdateUI();
   }
 
+  /// <summary>
+  /// Adds profit to the current balance, updates UI, and checks if the daily goal is reached
+  /// </summary>
   public void AddProfit(float amount)
   {
     if (amount <= 0f) return;

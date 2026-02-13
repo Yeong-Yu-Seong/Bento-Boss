@@ -1,3 +1,8 @@
+/// <summary>
+/// File: BentoMilestoneUnlock.cs
+/// Author: Jayden Wong
+/// Description: Reveals bento restock crates once the player's profit reaches the milestone amount.
+/// </summary>
 using UnityEngine;
 
 public class BentoMilestoneUnlock : MonoBehaviour

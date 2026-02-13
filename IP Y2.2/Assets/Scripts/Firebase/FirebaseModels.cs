@@ -1,11 +1,14 @@
+/// <summary>
+/// File: FirebaseModels.cs
+/// Author: Jayden Wong
+/// Description: Data models for Firebase storage including session summaries, inventory logs, transactions, and aggregate statistics.
+/// </summary>
 using System;
 using System.Collections.Generic;
 
 namespace BentoBoss.FirebaseManagers
 {
-  /// <summary>
-  /// Simple result wrapper - tells if operation succeeded or failed
-  /// </summary>
+  [Serializable]
   public class FirebaseResult<T>
   {
     public bool Success;
@@ -20,9 +23,6 @@ namespace BentoBoss.FirebaseManagers
     }
   }
 
-  /// <summary>
-  /// User data stored at: users/{userId}
-  /// </summary>
   [Serializable]
   public class UserData
   {
@@ -39,10 +39,6 @@ namespace BentoBoss.FirebaseManagers
     }
   }
 
-  /// <summary>
-  /// Session summary — timer, balance, milestone, waste count
-  /// Path: sessions/{userId}/{sessionId}/session_summary
-  /// </summary>
   [Serializable]
   public class SessionSummary
   {
@@ -59,7 +55,7 @@ namespace BentoBoss.FirebaseManagers
     public string completed_at;
 
     /// <summary>
-    /// Floats rounded to 2dp to ensure clean monetary/time values in Firebase.
+    /// Converts to dictionary with floats rounded to 2dp for clean monetary/time values in Firebase
     /// </summary>
     public Dictionary<string, object> ToDictionary()
     {
@@ -80,10 +76,6 @@ namespace BentoBoss.FirebaseManagers
     }
   }
 
-  /// <summary>
-  /// Inventory snapshot at end of session — counts for all 8 item types
-  /// Path: sessions/{userId}/{sessionId}/inventory_logs
-  /// </summary>
   [Serializable]
   public class InventoryLog
   {
@@ -112,10 +104,6 @@ namespace BentoBoss.FirebaseManagers
     }
   }
 
-  /// <summary>
-  /// Single transaction record for one customer order
-  /// Path: sessions/{userId}/{sessionId}/transaction_history/{order_id}
-  /// </summary>
   [Serializable]
   public class TransactionEntry
   {
@@ -131,7 +119,7 @@ namespace BentoBoss.FirebaseManagers
     public bool is_change_correct;
 
     /// <summary>
-    /// Floats rounded to 2dp for clean monetary values in Firebase.
+    /// Converts to dictionary with floats rounded to 2dp for clean monetary values in Firebase
     /// </summary>
     public Dictionary<string, object> ToDictionary()
     {
@@ -151,10 +139,6 @@ namespace BentoBoss.FirebaseManagers
     }
   }
 
-  /// <summary>
-  /// Complete session data wrapping all three nodes
-  /// Path: sessions/{userId}/{sessionId}
-  /// </summary>
   [Serializable]
   public class FirebaseSessionData
   {
@@ -162,6 +146,9 @@ namespace BentoBoss.FirebaseManagers
     public InventoryLog inventory_logs;
     public List<TransactionEntry> transaction_history;
 
+    /// <summary>
+    /// Converts full session to dictionary, keying transactions by their order_id
+    /// </summary>
     public Dictionary<string, object> ToDictionary()
     {
       var transactionDict = new Dictionary<string, object>();
@@ -182,36 +169,21 @@ namespace BentoBoss.FirebaseManagers
     }
   }
 
-  /// <summary>
-  /// Aggregate statistics calculated across all user sessions
-  /// Used for Handbook panel display
-  /// </summary>
   [Serializable]
   public class AggregateStats
   {
-    // Meta
     public int totalSessions;
-
-    // Performance
-    public int bestScore;           // Highest score from any session
-    public int recentScore;         // Most recent session score
-    public string bestGrade;        // Best grade achieved (S > A > B > C > D > F)
-
-    // Completion
-    public int totalOrdersCompleted;  // Sum of (food_correct + food_wrong) across all sessions
-
-    // Accuracy
-    public float foodAccuracyPercent;   // (total food_correct / total food orders) * 100
-    public float changeAccuracyPercent; // (total change_correct / total change orders) * 100
-
-    // Economy
-    public float highestBalance;    // Best final_balance from any session
-
-    // Time
-    public float totalPlaytimeSeconds;  // Sum of all total_time_seconds
+    public int bestScore;
+    public int recentScore;
+    public string bestGrade;
+    public int totalOrdersCompleted;
+    public float foodAccuracyPercent;
+    public float changeAccuracyPercent;
+    public float highestBalance;
+    public float totalPlaytimeSeconds;
 
     /// <summary>
-    /// Helper method to format playtime as "Xh Ym" or "Ym"
+    /// Formats playtime as "Xh Ym" or "Ym" for UI display
     /// </summary>
     public string GetFormattedPlaytime()
     {

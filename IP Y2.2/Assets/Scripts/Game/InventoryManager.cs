@@ -1,3 +1,8 @@
+/// <summary>
+/// File: InventoryManager.cs
+/// Author: Jayden Wong
+/// Description: Tracks item counts across XR sockets, updates stock display UI, and handles trash disposal.
+/// </summary>
 using UnityEngine;
 using TMPro;
 using UnityEngine.XR.Interaction.Toolkit;
@@ -11,13 +16,10 @@ public class InventoryStockDisplay : MonoBehaviour
   public TextMeshProUGUI stockTextLeft;
   public TextMeshProUGUI stockTextRight;
 
-  // Left column order: Apple, Banana, Orange, Strawberry
   private string[] leftColumnFoods = { "Apple", "Banana", "Orange", "Strawberry" };
 
-  // Right column order: Bento1, Bento2, Blueberry, GreenTea
   private string[] rightColumnFoods = { "Bento1", "Bento2", "Blueberry", "GreenTea" };
 
-  // Display name mapping for Bento items
   private Dictionary<string, string> displayNames = new Dictionary<string, string>
     {
         { "Bento1", "BentoSet 1" },
@@ -62,6 +64,9 @@ public class InventoryStockDisplay : MonoBehaviour
     if (SessionLogger.Instance != null) SessionLogger.Instance.PushInventoryNow();
   }
 
+  /// <summary>
+  /// Returns a dictionary of item tag names to their current count across all sockets
+  /// </summary>
   public Dictionary<string, int> CountFoodByType()
   {
     var counts = new Dictionary<string, int>();
@@ -131,6 +136,9 @@ public class InventoryStockDisplay : MonoBehaviour
     }
   }
 
+  /// <summary>
+  /// Increments trash count, updates UI, pushes inventory to Firebase, and destroys the object
+  /// </summary>
   public void DisposeTrash(GameObject trashedObject)
   {
     if (trashedObject == null) return;

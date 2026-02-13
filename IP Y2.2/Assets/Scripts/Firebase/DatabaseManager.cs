@@ -1,3 +1,8 @@
+/// <summary>
+/// File: DatabaseManager.cs
+/// Author: Jayden Wong
+/// Description: Handles all Firebase Realtime Database operations for user data, sessions, and aggregate statistics.
+/// </summary>
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -6,10 +11,6 @@ using Firebase.Database;
 
 namespace BentoBoss.FirebaseManagers
 {
-  /// <summary>
-  /// Handles database operations for user data
-  /// Database path: users/{userId}
-  /// </summary>
   public class DatabaseManager : MonoBehaviour
   {
     public static DatabaseManager Instance { get; private set; }
@@ -36,8 +37,7 @@ namespace BentoBoss.FirebaseManagers
     }
 
     /// <summary>
-    /// Save user data (email + username) after registration
-    /// Path: users/{userId}
+    /// Saves user data (email + username) after registration
     /// </summary>
     public async Task<FirebaseResult<bool>> SaveUserData(string userId, string email, string username)
     {
@@ -65,7 +65,7 @@ namespace BentoBoss.FirebaseManagers
     }
 
     /// <summary>
-    /// Check if a username is already taken
+    /// Checks if a username is already taken
     /// </summary>
     public async Task<FirebaseResult<bool>> CheckUsernameExists(string username)
     {
@@ -91,8 +91,7 @@ namespace BentoBoss.FirebaseManagers
     }
 
     /// <summary>
-    /// Fetch user data by userId
-    /// Path: users/{userId}
+    /// Fetches user data by userId
     /// </summary>
     public async Task<FirebaseResult<UserData>> GetUserData(string userId)
     {
@@ -126,8 +125,7 @@ namespace BentoBoss.FirebaseManagers
     }
 
     /// <summary>
-    /// Save a complete game session with summary, inventory, and transaction history
-    /// Path: sessions/{userId}/{sessionId}
+    /// Saves a complete game session with summary, inventory, and transaction history
     /// </summary>
     public async Task<FirebaseResult<bool>> SaveSessionData(string userId, string sessionId, FirebaseSessionData sessionData)
     {
@@ -150,8 +148,7 @@ namespace BentoBoss.FirebaseManagers
     }
 
     /// <summary>
-    /// Push only the changed inventory field using UpdateChildrenAsync.
-    /// Avoids overwriting all 8 fields when only 1 item changed.
+    /// Pushes only a single changed inventory field to avoid overwriting all 8 fields
     /// </summary>
     public async void PushInventoryFieldLive(string userId, string sessionId, string entryKey, int newValue)
     {
@@ -168,8 +165,7 @@ namespace BentoBoss.FirebaseManagers
     }
 
     /// <summary>
-    /// Push a single transaction entry in real-time
-    /// Path: sessions/{userId}/{sessionId}/transaction_history/{orderId}
+    /// Pushes a single transaction entry in real-time
     /// </summary>
     public async void PushTransactionLive(string userId, string sessionId, string orderId, Dictionary<string, object> data)
     {
@@ -185,8 +181,7 @@ namespace BentoBoss.FirebaseManagers
     }
 
     /// <summary>
-    /// Partially update session_summary fields without overwriting siblings
-    /// Path: sessions/{userId}/{sessionId}/session_summary
+    /// Partially updates session_summary fields without overwriting siblings
     /// </summary>
     public async void PushSummaryFieldsLive(string userId, string sessionId, Dictionary<string, object> fields)
     {
@@ -202,8 +197,7 @@ namespace BentoBoss.FirebaseManagers
     }
 
     /// <summary>
-    /// Push elapsed timer value in real-time
-    /// Path: sessions/{userId}/{sessionId}/session_summary/total_time_seconds
+    /// Pushes elapsed timer value in real-time
     /// </summary>
     public async void PushTimerLive(string userId, string sessionId, float elapsed)
     {
@@ -220,7 +214,6 @@ namespace BentoBoss.FirebaseManagers
 
     /// <summary>
     /// Retrieves all sessions for a user and calculates aggregate statistics
-    /// Path: sessions/{userId}
     /// </summary>
     public async Task<FirebaseResult<AggregateStats>> GetAggregateStats(string userId)
     {
@@ -232,11 +225,9 @@ namespace BentoBoss.FirebaseManagers
           return new FirebaseResult<AggregateStats>(false, null, "Database not initialized");
         }
 
-        // Query sessions/{userId}/
         DatabaseReference sessionsRef = _database.Child("sessions").Child(userId);
         var snapshot = await sessionsRef.GetValueAsync();
 
-        // Initialize aggregate stats
         var stats = new AggregateStats
         {
           totalSessions = 0,
@@ -250,14 +241,12 @@ namespace BentoBoss.FirebaseManagers
           totalPlaytimeSeconds = 0f
         };
 
-        // If no sessions exist, return zeros
         if (!snapshot.Exists || !snapshot.HasChildren)
         {
           Debug.Log($"[DatabaseManager] No sessions found for user {userId}");
           return new FirebaseResult<AggregateStats>(true, stats);
         }
 
-        // Accumulators for accuracy calculation
         int totalFoodCorrect = 0;
         int totalFoodWrong = 0;
         int totalChangeCorrect = 0;
@@ -265,12 +254,11 @@ namespace BentoBoss.FirebaseManagers
 
         string mostRecentSessionId = "";
 
-        // Iterate through all sessions
         foreach (var sessionSnapshot in snapshot.Children)
         {
           stats.totalSessions++;
 
-          // Track most recent session (sessions are formatted yyyyMMdd_HHmm)
+          // Session IDs are formatted yyyyMMdd_HHmm so string comparison finds the most recent
           string sessionId = sessionSnapshot.Key;
           if (string.Compare(sessionId, mostRecentSessionId) > 0)
           {
@@ -280,7 +268,6 @@ namespace BentoBoss.FirebaseManagers
           var summary = sessionSnapshot.Child("session_summary");
           if (!summary.Exists) continue;
 
-          // Parse values with safe fallbacks
           int score = summary.Child("final_score").Value != null
               ? int.Parse(summary.Child("final_score").Value.ToString())
               : 0;
@@ -311,7 +298,6 @@ namespace BentoBoss.FirebaseManagers
               ? int.Parse(summary.Child("change_wrong_count").Value.ToString())
               : 0;
 
-          // Accumulate
           if (score > stats.bestScore)
             stats.bestScore = score;
 
@@ -329,14 +315,12 @@ namespace BentoBoss.FirebaseManagers
           totalChangeCorrect += changeCorrect;
           totalChangeWrong += changeWrong;
 
-          // If this is the most recent session, store its score
           if (sessionId == mostRecentSessionId)
           {
             stats.recentScore = score;
           }
         }
 
-        // Calculate accuracy percentages
         int totalFoodOrders = totalFoodCorrect + totalFoodWrong;
         if (totalFoodOrders > 0)
           stats.foodAccuracyPercent = (float)totalFoodCorrect / totalFoodOrders * 100f;
@@ -357,7 +341,7 @@ namespace BentoBoss.FirebaseManagers
     }
 
     /// <summary>
-    /// Helper method to compare grade priority (S > A > B > C > D > F)
+    /// Compares grade priority where S is highest and F is lowest
     /// </summary>
     private static int GetGradePriority(string grade)
     {

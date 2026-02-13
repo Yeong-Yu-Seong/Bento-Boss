@@ -1,3 +1,8 @@
+/// <summary>
+/// File: TrayCollisionHandler.cs
+/// Author: Jayden Wong
+/// Description: Freezes collected money rigidbodies on the tray after a short delay to prevent physics jitter.
+/// </summary>
 using UnityEngine;
 using System.Collections;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
@@ -23,6 +28,9 @@ public class TrayCollisionHandler : MonoBehaviour
     }
   }
 
+  /// <summary>
+  /// Waits then freezes the rigidbody unless the player is still holding the money
+  /// </summary>
   private IEnumerator FreezeMoneyAfterDelay(Rigidbody rb, float delay)
   {
     yield return new WaitForSeconds(delay);
@@ -40,6 +48,5 @@ public class TrayCollisionHandler : MonoBehaviour
 
   private void OnCollisionExit(Collision collision)
   {
-    // No logic needed here; TrayValidator handles removal accounting
   }
 }

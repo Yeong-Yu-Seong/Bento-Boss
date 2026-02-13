@@ -1,3 +1,8 @@
+/// <summary>
+/// File: SessionLogger.cs
+/// Author: Jayden Wong
+/// Description: Central session logging orchestrator that pushes inventory, transactions, balance, and timer to Firebase in real-time.
+/// </summary>
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System;
@@ -5,11 +10,6 @@ using System.Collections;
 using System.Collections.Generic;
 using BentoBoss.FirebaseManagers;
 
-/// <summary>
-/// Central session logging orchestrator.
-/// Pushes inventory, transactions, balance, and timer to Firebase in real-time.
-/// Does a final complete write on EndSession().
-/// </summary>
 public class SessionLogger : MonoBehaviour
 {
   public static SessionLogger Instance { get; private set; }
@@ -27,17 +27,15 @@ public class SessionLogger : MonoBehaviour
   private float _lastTimerPush;
   private const float TIMER_PUSH_INTERVAL = 10f;
 
-  // Cached inventory counts for diff-based pushes — only changed fields go to Firebase
+  // Only push inventory fields that actually changed since last push
   private Dictionary<string, int> _lastInventoryCounts = new Dictionary<string, int>();
   private int _lastTrashCount = -1;
 
-  // Session-level accuracy counters
   private int _foodCorrectCount = 0;
   private int _foodWrongCount = 0;
   private int _changeCorrectCount = 0;
   private int _changeWrongCount = 0;
 
-  // Maps Unity tags to Firebase inventory_logs field names
   private static readonly Dictionary<string, string> TagToFirebaseKey = new Dictionary<string, string>
   {
     { "Apple", "apple_count" },
@@ -70,7 +68,6 @@ public class SessionLogger : MonoBehaviour
     _sessionTimestamp = DateTime.Now.ToString("yyyyMMdd_HHmm");
     _userId = AuthManager.Instance?.CurrentUser?.UserId;
 
-    // Push initial session_summary to create the node in Firebase immediately
     if (IsReady)
     {
       var initialFields = new Dictionary<string, object>
@@ -93,13 +90,11 @@ public class SessionLogger : MonoBehaviour
   {
     if (_sessionEnded) return;
 
-    // Retry userId cache if it wasn't available at Start
     if (string.IsNullOrEmpty(_userId))
     {
       _userId = AuthManager.Instance?.CurrentUser?.UserId;
     }
 
-    // Push timer every 10 seconds
     if (IsReady && Time.time - _lastTimerPush >= TIMER_PUSH_INTERVAL)
     {
       _lastTimerPush = Time.time;
@@ -109,8 +104,7 @@ public class SessionLogger : MonoBehaviour
   }
 
   /// <summary>
-  /// Log a completed transaction and push it to Firebase immediately.
-  /// Called from PaymentHandler after each successful order.
+  /// Logs a completed transaction and pushes it to Firebase immediately
   /// </summary>
   public void LogTransaction(string food, int foodQty, string drink, int drinkQty,
       bool correctItem, float orderCost, float amountPaid, float changeGiven, bool changeCorrect)
@@ -133,13 +127,11 @@ public class SessionLogger : MonoBehaviour
 
     _transactions.Add(entry);
 
-    // Update session-level accuracy counters
     if (correctItem) _foodCorrectCount++; else _foodWrongCount++;
     if (changeCorrect) _changeCorrectCount++; else _changeWrongCount++;
 
     Debug.Log($"[SessionLogger] Transaction logged: {entry.order_id} - {food} x{foodQty}, {drink} x{drinkQty}, ${orderCost:F2} | Food correct: {correctItem}, Change correct: {changeCorrect}");
 
-    // Push to Firebase immediately
     if (IsReady)
     {
       DatabaseManager.Instance.PushTransactionLive(_userId, _sessionTimestamp, entry.order_id, entry.ToDictionary());
@@ -148,8 +140,7 @@ public class SessionLogger : MonoBehaviour
   }
 
   /// <summary>
-  /// Diff-based inventory push — only sends changed fields to Firebase.
-  /// Compares current counts against cached values, pushes individual fields via UpdateChildrenAsync.
+  /// Diff-based inventory push that only sends changed fields to Firebase
   /// </summary>
   public void PushInventoryNow()
   {
@@ -172,7 +163,6 @@ public class SessionLogger : MonoBehaviour
       }
     }
 
-    // Push trash count only if changed
     int trashCount = inventoryDisplay.TrashDisposed;
     if (trashCount != _lastTrashCount)
     {
@@ -183,8 +173,7 @@ public class SessionLogger : MonoBehaviour
   }
 
   /// <summary>
-  /// Push current balance and bento unlock status to Firebase.
-  /// Called from EarningsTracker when profit changes.
+  /// Pushes current balance and bento unlock status to Firebase
   /// </summary>
   public void PushBalanceNow(float balance)
   {
@@ -198,10 +187,6 @@ public class SessionLogger : MonoBehaviour
     DatabaseManager.Instance.PushSummaryFieldsLive(_userId, _sessionTimestamp, fields);
   }
 
-  /// <summary>
-  /// Push accuracy counters to Firebase in real-time.
-  /// Called after each transaction is logged.
-  /// </summary>
   private void PushAccuracyNow()
   {
     if (!IsReady) return;
@@ -217,8 +202,7 @@ public class SessionLogger : MonoBehaviour
   }
 
   /// <summary>
-  /// End the session and push final complete snapshot to Firebase.
-  /// Called from EarningsTracker.OnGoalReached().
+  /// Ends the session, calculates final score, and pushes the complete snapshot to Firebase
   /// </summary>
   public void EndSession()
   {
@@ -229,7 +213,6 @@ public class SessionLogger : MonoBehaviour
     float finalBalance = EarningsTracker.Instance != null ? EarningsTracker.Instance.CurrentProfit : 0f;
     bool bentoUnlocked = finalBalance >= 15f;
 
-    // Gather inventory snapshot
     int trashCount = 0;
     var inventoryLog = new InventoryLog();
 
@@ -248,7 +231,6 @@ public class SessionLogger : MonoBehaviour
       if (counts.TryGetValue("GreenTea", out int greenTea)) inventoryLog.green_tea_count = greenTea;
     }
 
-    // Calculate final score
     var scoreResult = ScoreCalculator.Calculate(
         _foodCorrectCount, _foodWrongCount,
         _changeCorrectCount, _changeWrongCount,
@@ -276,7 +258,6 @@ public class SessionLogger : MonoBehaviour
 
     Debug.Log($"[SessionLogger] Session ending — {_transactions.Count} transactions, {elapsed:F1}s, ${finalBalance:F2}, Score: {scoreResult.totalScore} ({scoreResult.grade})");
 
-    // CRITICAL: Pass data to AuthUIController BEFORE scene load
     if (AuthUIController.Instance != null)
     {
       AuthUIController.Instance.SetEndScreenData(
@@ -295,7 +276,6 @@ public class SessionLogger : MonoBehaviour
       Debug.LogError("[SessionLogger] AuthUIController.Instance is null!");
     }
 
-    // Fire-and-forget Firebase save (DatabaseManager persists via DontDestroyOnLoad)
     string userId = !string.IsNullOrEmpty(_userId) ? _userId : AuthManager.Instance?.CurrentUser?.UserId;
     if (!string.IsNullOrEmpty(userId))
     {
@@ -306,7 +286,6 @@ public class SessionLogger : MonoBehaviour
       Debug.LogError("[SessionLogger] No authenticated user — session not saved to Firebase");
     }
 
-    // Wait 3 seconds then load MenuScene
     StartCoroutine(LoadMenuSceneAfterDelay(3f));
   }
 
@@ -316,10 +295,6 @@ public class SessionLogger : MonoBehaviour
     SceneManager.LoadScene("MenuScene");
   }
 
-  /// <summary>
-  /// Fire-and-forget async helper for Firebase save.
-  /// Runs on DatabaseManager which is DontDestroyOnLoad.
-  /// </summary>
   private async void SaveSessionDataAsync(string userId, string sessionId, FirebaseSessionData sessionData)
   {
     try
