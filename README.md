@@ -21,9 +21,9 @@ Students Order → Player Serves → Student Pays → Player Returns Change → 
 Players must manage inventory using physical VR interactions. When a food item runs out:
 
 1. **Retrieve Crate:** Locate the crate color corresponding to the food item.
-* **Yellow:** Fruits
-* **Blue:** Drinks
-* **Red:** Bentos
+* **Yellow** 🟡 : Fruits
+* **Blue** 🔵 : Drinks
+* **Red** 🔴 : Bentos
 
 
 2. **Open:** Physically grab and remove the lid of the crate to reveal the stock.
