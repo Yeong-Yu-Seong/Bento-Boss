@@ -8,7 +8,7 @@ Made by the **Jellyfish** team, Bento Boss is set in a school stall where player
 
 * **Target Audience:** Ages 7–14
 * **Purpose:** Teach money counting, change giving, and simple resource management skills.
-* **Web Integration:** [Launch Web App Companion](https://ip-y2-2.web.app)
+* **Web Integration:** [Link](https://ip-y2-2.web.app)
 
 ---
 
