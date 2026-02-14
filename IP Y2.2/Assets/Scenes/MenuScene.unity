@@ -29571,7 +29571,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1717954561962503726, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.5
+      value: 1.8
       objectReference: {fileID: 0}
     - target: {fileID: 1717954561962503726, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
       propertyPath: m_LocalPosition.z
@@ -69782,6 +69782,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1be0a7b10f0e6724da64ca6e3f425561, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSpawn
+  targetVirtualHeight: 1.75
 --- !u!4 &1002914662
 Transform:
   m_ObjectHideFlags: 0

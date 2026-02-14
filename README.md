@@ -14,6 +14,32 @@ Made by the **Jellyfish** team, Bento Boss is set in a school canteen stall wher
 
 ---
 
+## ⚠️ IMPORTANT: Play Position
+
+**Choose ONE position and stick with it for the entire session:**
+
+### Option 1: Standing Play (Recommended)
+1. Stand upright when setting up Guardian
+2. Play the entire session standing
+3. DO NOT sit down during gameplay
+
+### Option 2: Sitting Play
+1. Sit down when setting up Guardian
+2. Play the entire session sitting
+3. DO NOT stand up during gameplay
+
+**Why?**
+- The game locks your height at the start (1.75m virtual height)
+- Standing up or sitting down mid-game will cause misalignment
+- Counter/tray will be at wrong height
+
+**If you switch positions:**
+- Quit the game
+- Re-run Guardian setup in your new position (sitting/standing)
+- Restart the game
+
+---
+
 ## Game Loop & Mechanics
 
 ### **The Core Loop**
