@@ -64,6 +64,8 @@ public class TrayValidator : MonoBehaviour
   [SerializeField] private ParticleSystem failVFX;
   [Tooltip("How long the VFX plays before being stopped (seconds)")]
   [SerializeField] private float feedbackDuration = 2f;
+  [Tooltip("Minimum time between VFX plays to prevent duplicate particles (seconds)")]
+  [SerializeField] private float vfxCooldown = 0.5f;
 
   private Dictionary<string, int> itemsOnTray = new Dictionary<string, int>();
   private List<GameObject> physicalItemsOnTray = new List<GameObject>();
@@ -104,6 +106,7 @@ public class TrayValidator : MonoBehaviour
   private HashSet<GameObject> collectedMoneySet = new HashSet<GameObject>();
 
   private Dictionary<GameObject, Rigidbody> rbCache = new Dictionary<GameObject, Rigidbody>();
+  private float lastVFXTime = -1f;
 
   private static readonly Dictionary<string, float> moneyValues = new Dictionary<string, float>
     {
@@ -452,8 +455,9 @@ public class TrayValidator : MonoBehaviour
       feedbackAudioSource.PlayOneShot(clip);
     }
 
-    if (vfx != null)
+    if (vfx != null && Time.time >= lastVFXTime + vfxCooldown)
     {
+      lastVFXTime = Time.time;
       vfx.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
       vfx.Play();
       StartCoroutine(StopVFXAfterDuration(vfx, feedbackDuration));
